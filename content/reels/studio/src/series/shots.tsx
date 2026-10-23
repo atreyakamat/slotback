@@ -583,7 +583,7 @@ export const FlagShot: React.FC<ShotProps<"flag">> = ({ shot }) => {
   );
 };
 
-export const EndCard: React.FC = () => {
+export const EndCard: React.FC<{ cta?: string }> = ({ cta = "Free demo · link in bio" }) => {
   const frame = useCurrentFrame();
   return (
     <AbsoluteFill style={{ backgroundColor: colors.green, alignItems: "center", justifyContent: "center", gap: 70 }}>
@@ -591,7 +591,7 @@ export const EndCard: React.FC = () => {
         <Logo size={130} />
       </div>
       <div style={{ borderRadius: 999, background: colors.lime, color: colors.green, padding: "30px 64px", fontFamily: fonts.body, fontWeight: 800, fontSize: 50, opacity: interpolate(frame, [6, 10], [0, 1], clamp), scale: String(interpolate(frame, [6, 13], [0.5, 1], { ...clamp, easing: springy })) }}>
-        Free demo · link in bio
+        {cta}
       </div>
     </AbsoluteFill>
   );

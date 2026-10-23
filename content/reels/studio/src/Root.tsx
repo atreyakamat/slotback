@@ -20,7 +20,7 @@ export const RemotionRoot: React.FC = () => (
       height={HEIGHT}
       defaultProps={{ music: "placeholder", captions: true } satisfies ReelProps}
     />
-    {(["01", "02"] as const).map((series) => (
+    {(["01", "02", "03"] as const).map((series) => (
       <Folder key={series} name={`Series${series}`}>
         {reels
           .filter((r) => (r.series ?? "01") === series)

@@ -1,5 +1,6 @@
 import { SeriesReel } from "./types";
 import { series02 } from "./reels-02";
+import { series03 } from "./reels-03";
 
 // Series 01: the approved scripts from "SlotBack reel series: 20 scripts".
 // Reel 4 is the brand film (src/SlotBackReel.tsx), so it isn't listed here.
@@ -232,4 +233,4 @@ const series01: SeriesReel[] = [
   },
 ];
 
-export const reels: SeriesReel[] = [...series01, ...series02];
+export const reels: SeriesReel[] = [...series01, ...series02, ...series03];

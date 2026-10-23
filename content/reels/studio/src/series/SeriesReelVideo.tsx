@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Audio } from "@remotion/media";
-import { colors, FPS } from "../theme";
+import { colors, fonts, FPS } from "../theme";
 import { Flash, Grain, SceneMotion } from "../components/effects";
 import { buildTimeline, PlacedShot } from "./timeline";
 import { EndCard, seg, shotComponents, ShotProps } from "./shots";
@@ -20,6 +20,7 @@ const songFile: Record<SeriesReel["track"], string> = {
   paixao: "music/paixao-sped-up.mp3",
   cavuca: "music/cavuca-funk.mp3",
   struct: "music/struct-slowed.mp3",
+  phonk: "music/phonk-compilation.mp3",
 };
 
 const moves = ["whip", "punch", "push", "blur"] as const;
@@ -99,12 +100,25 @@ const cuesFor = (p: PlacedShot): Cue[] => {
   return out;
 };
 
-const BeatBump: React.FC<{ beats: number[]; children: React.ReactNode }> = ({ beats, children }) => {
+// Pulses on every beat. In fast mode it also jump-zooms every 2 beats, which
+// reads as a camera cut inside longer shots.
+const BeatBump: React.FC<{ beats: number[]; amount: number; jump: boolean; children: React.ReactNode }> = ({ beats, amount, jump, children }) => {
   const frame = useCurrentFrame();
-  const last = beats.filter((b) => b <= frame).pop();
-  const scale = last === undefined ? 1 : 1 + 0.025 * Math.exp(-(frame - last) / 4);
-  return <AbsoluteFill style={{ scale: String(scale) }}>{children}</AbsoluteFill>;
+  const passed = beats.filter((b) => b <= frame);
+  const last = passed[passed.length - 1];
+  const pulse = last === undefined ? 1 : 1 + amount * Math.exp(-(frame - last) / 4);
+  const zoom = jump && Math.floor((passed.length - 1) / 2) % 2 === 1 ? 1.06 : 1;
+  return <AbsoluteFill style={{ scale: String(pulse * zoom) }}>{children}</AbsoluteFill>;
 };
+
+// Small pill pinned near the top, e.g. "Illustrative example".
+const Badge: React.FC<{ text: string }> = ({ text }) => (
+  <AbsoluteFill style={{ pointerEvents: "none", alignItems: "center" }}>
+    <div style={{ marginTop: 120, padding: "12px 30px", borderRadius: 999, background: "rgba(7,20,15,0.72)", border: `2px solid ${colors.muted}`, color: colors.cream, fontFamily: fonts.body, fontWeight: 700, fontSize: 30, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+      {text}
+    </div>
+  </AbsoluteFill>
+);
 
 // Thin top bar that fills over the reel, a small nudge to watch to the end.
 const ProgressBar: React.FC<{ total: number }> = ({ total }) => {
@@ -133,19 +147,29 @@ export const SeriesReelVideo: React.FC<SeriesReelProps> = ({ reelId, withSong })
     [t.endCardFrom, "whoosh", 0.5],
     [t.endCardFrom + 6, "pop", 0.8],
   ];
+  if (reel.fast) {
+    const riser = Math.round(1.6 * FPS);
+    const hits = [t.dropFrame, ...t.laterDropFrames];
+    cues.push(
+      ...t.shots.slice(1).map((p): Cue => [p.from, "snap", 0.5]),
+      ...hits.filter((f) => f >= riser).map((f): Cue => [f - riser, "riser", 0.55]),
+      ...hits.map((f): Cue => [f, "sub", 0.85]),
+      [Math.max(0, t.endCardFrom - 27), "swell", 0.5],
+    );
+  }
   return (
     <AbsoluteFill style={{ backgroundColor: colors.ink }}>
-      <BeatBump beats={t.beatFrames}>
+      <BeatBump beats={t.beatFrames} amount={reel.fast ? 0.045 : 0.025} jump={!!reel.fast}>
         {t.shots.map((p) => (
           <Sequence key={p.index} from={p.from} durationInFrames={p.duration} name={`${p.index}. ${p.shot.type}`}>
-            <SceneMotion enter={p.index === 0 ? "none" : moves[p.index % moves.length]} enterLength={7}>
+            <SceneMotion enter={p.index === 0 ? "none" : moves[p.index % moves.length]} enterLength={reel.fast ? 5 : 7}>
               <ShotView placed={p} />
             </SceneMotion>
           </Sequence>
         ))}
         <Sequence from={t.endCardFrom} name="end card">
           <SceneMotion enter="punch" enterLength={6}>
-            <EndCard />
+            <EndCard cta={reel.cta} />
           </SceneMotion>
         </Sequence>
       </BeatBump>
@@ -154,6 +178,7 @@ export const SeriesReelVideo: React.FC<SeriesReelProps> = ({ reelId, withSong })
         <Flash key={f} at={f} length={6} />
       ))}
       {reel.progressBar && <ProgressBar total={t.total} />}
+      {reel.badge && <Badge text={reel.badge} />}
       {reel.vo && <SeriesCaptions lines={reel.vo} />}
       <Grain />
 

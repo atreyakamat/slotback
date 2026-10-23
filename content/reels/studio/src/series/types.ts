@@ -2,7 +2,7 @@
 // lengths are counted in beats of the reel's track, then an end card.
 // Text props accept light markup: *lime*, ~red~, _muted_.
 
-export type TrackId = "windows" | "paixao" | "cavuca" | "struct";
+export type TrackId = "windows" | "paixao" | "cavuca" | "struct" | "phonk";
 
 // `beats: "drop"` runs the shot up to the reel's next listed later drop.
 type Base = { beats: number | "drop" };
@@ -46,6 +46,13 @@ export type SeriesReel = {
   // Song times of later drops; each gets a flash and impact, and shots
   // with beats: "drop" end on the next one.
   laterDrops?: number[];
-  series?: "01" | "02";
+  series?: "01" | "02" | "03";
   progressBar?: boolean;
+  // Fast-cut mode: a snap on every cut, risers into drops, a sub on each hit
+  // and a harder beat pulse.
+  fast?: boolean;
+  // Label pinned to the top of the frame for the whole reel.
+  badge?: string;
+  // End card button text; defaults to the free demo line.
+  cta?: string;
 };
