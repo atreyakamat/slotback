@@ -4,8 +4,9 @@ A 26.7s vertical (1080×1920, 30 fps) Instagram reel built in [Remotion](https:/
 
 Latest renders are in [`exports/`](exports):
 
-- `slotback-brand-reel-v1-with-beat.mp4` has an original synthesised beat, so there are no rights issues.
-- `slotback-brand-reel-v1-for-instagram-music.mp4` has voice and sound effects only. Add the trending track in Instagram's audio picker.
+- `04-brand-film-v2-post.mp4` has voice and sound effects only, and uses logo B. In Instagram, add **WINDOWS IN BRAZIL** from the audio picker with the song start at **0:00**. Its first drop lands on the logo slam.
+
+To preview against a song locally, put the MP3 in `public/music/` (it's gitignored, so licensed songs never get committed) and render with `--props='{"music":"music/windows-in-brazil.mp3","musicStart":0,"musicDelay":4,"captions":true}'`.
 
 Don't bake copyrighted music into an export. Instagram can mute the reel if you do.
 
