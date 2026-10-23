@@ -8,7 +8,7 @@ import { readSession } from "./session";
 
 export type Member = {
   user: { id: string; name: string; email: string };
-  organization: { id: string; name: string; isDemo: boolean };
+  organization: { id: string; name: string; isDemo: boolean; onboardedAt: Date | null };
   location: { id: string; name: string; timezone: string; currency: string };
   role: Role;
 };
@@ -27,7 +27,7 @@ export const getMember = cache(async (): Promise<Member | null> => {
     select: {
       role: true,
       user: { select: { id: true, name: true, email: true } },
-      organization: { select: { id: true, name: true, isDemo: true } },
+      organization: { select: { id: true, name: true, isDemo: true, onboardedAt: true } },
     },
   });
   if (!membership) return null;

@@ -33,6 +33,7 @@ jobs:
       SESSION_SECRET: ci-only-session-secret-not-used-anywhere-else
       NEXT_PUBLIC_APP_URL: http://localhost:3100
       DEMO_MODE: "true"
+      AUTH_EMAIL_PROVIDER: dev-insecure
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

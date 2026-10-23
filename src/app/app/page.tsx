@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, CalendarCheck, CalendarX2, FlaskConical, IndianRupee, ListChecks, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Skeleton } from "@/components/app/skeleton";
@@ -9,7 +10,7 @@ import { AutoRefresh } from "@/components/campaigns/auto-refresh";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPaise } from "@/lib/money";
 import { formatDate, formatTime } from "@/lib/time";
-import { requireMember } from "@/server/auth/dal";
+import { canManage, requireMember } from "@/server/auth/dal";
 import { getRecoveryMetrics } from "@/server/queries/metrics";
 import { getTodayOverview } from "@/server/queries/overview";
 
@@ -25,6 +26,7 @@ export default function TodayPage() {
 
 async function Today() {
   const member = await requireMember();
+  if (!member.organization.onboardedAt && canManage(member)) redirect("/onboarding");
   const now = new Date();
   const [{ resources, stats }, recovery] = await Promise.all([
     getTodayOverview(member, now),
@@ -48,7 +50,7 @@ async function Today() {
       />
 
       {stats.liveCampaigns > 0 ? <AutoRefresh /> : null}
-      {member.organization.isDemo ? <DemoGuide /> : null}
+      {member.organization.isDemo ? <DemoGuide /> : stats.activeWaitlist < 3 ? <GettingStarted waitlist={stats.activeWaitlist} /> : null}
       <RecoveryHero recovery={recovery} liveCampaigns={stats.liveCampaigns} tz={tz} />
 
       <section aria-label="Today at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
@@ -205,5 +207,36 @@ function TodaySkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+/** First steps for a new business, until a few clients are on the waitlist. */
+function GettingStarted({ waitlist }: { waitlist: number }) {
+  const steps = [
+    { done: waitlist > 0, title: "Add clients to your waitlist", body: "People who'd take an earlier slot if one opened up.", href: "/app/waitlist" },
+    { done: false, title: "Put this week's bookings on the schedule", body: "So SlotBack knows which slots can open up.", href: "/app/schedule" },
+    { done: false, title: "Refill your next cancellation", body: "Open the booking and choose “Cancel and refill”.", href: "/app/schedule" },
+  ];
+  return (
+    <Card className="mb-6 border-accent/30">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="size-4 text-accent" aria-hidden /> You&apos;re set up. Three steps to your first refill.
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ol className="grid gap-3 sm:grid-cols-3">
+          {steps.map((s, i) => (
+            <li key={s.title}>
+              <Link href={s.href} className="block h-full rounded-xl border bg-surface p-4 transition-colors hover:border-accent/40">
+                <span className="text-xs font-medium text-accent">{s.done ? "Done" : `Step ${i + 1}`}</span>
+                <span className="mt-1 block font-medium">{s.title}</span>
+                <span className="mt-1 block text-sm text-muted">{s.body}</span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
   );
 }

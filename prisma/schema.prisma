@@ -34,6 +34,11 @@ model Organization {
   name        String
   plan        String       @default("pilot")
   isDemo      Boolean      @default(false) @map("is_demo")
+  /// Business type chosen at sign-up, e.g. "salon"; drives suggested services during onboarding.
+  vertical    String?
+  city        String?
+  /// Set when the owner finishes the setup wizard. Null sends owners to /onboarding.
+  onboardedAt DateTime?    @map("onboarded_at")
   createdAt   DateTime     @default(now()) @map("created_at")
   memberships Membership[]
   locations   Location[]

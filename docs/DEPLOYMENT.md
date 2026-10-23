@@ -25,11 +25,23 @@ SlotBack uses Supabase as plain Postgres for now. No Supabase API keys are neede
 | `DEMO_MODE` | `true` |
 | `CRON_SECRET` | Output of `openssl rand -base64 24`. Lets the every-minute job expire offers and send queued messages |
 | `MESSAGE_PROVIDER` | `demo` (simulated; nothing is sent to real phones until a provider is approved) |
+| `AUTH_EMAIL_PROVIDER` | `supabase` (emails sign-in links for real businesses). Never `dev-insecure` here |
+| `SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
+| `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → publishable (anon) key. Never the service role key |
 
 3. Trigger a deploy. Production deploys run `prisma migrate deploy` before building, so the schema is created on the first deploy.
 4. Open `/api/health`. It should return `{"status":"ok"}`.
 5. Open `/login` and click **Try the demo workspace**. The demo salon is created on first use.
 6. **Logs → Functions → `tick`** should show a run every minute with no warnings. If it says `CRON_SECRET not set`, add the variable and redeploy.
+
+### Email sign-in (Supabase Auth)
+
+Businesses sign up and sign in with a link emailed through Supabase Auth. SlotBack only uses Supabase to send and check those links; it keeps its own session.
+
+1. Supabase → **Authentication → URL Configuration**: set **Site URL** to your `NEXT_PUBLIC_APP_URL`, and add `https://<your-site>.netlify.app/auth/callback` and `https://slotback.atreyakamat.dev/auth/callback` to **Redirect URLs**.
+2. Supabase → **Authentication → Providers → Email**: keep it enabled. Passwords aren't used.
+3. Supabase's built-in email sender has a small hourly limit meant for testing. Before inviting real businesses, add a custom SMTP sender under **Authentication → Emails → SMTP settings** (a paid or free-tier email service; needs approval).
+4. The link must be opened in the same browser that asked for it. Test it: sign up at `/signup` with your own email, click the link, and finish the setup steps.
 
 ## Go-live checklist
 

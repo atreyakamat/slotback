@@ -77,6 +77,7 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
     data: {
       name: "Casa Verde Salon",
       isDemo: true,
+      onboardedAt: now,
       memberships: { create: { userId: user.id, role: "OWNER" } },
       locations: {
         create: {
