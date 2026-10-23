@@ -10,7 +10,7 @@ export async function getCampaignDetail(member: Member, id: string) {
   if (!exists) return null;
 
   const [preview, offers, claim] = await Promise.all([
-    previewCampaign(db, toActor(member), id, { baseUrl: env().NEXT_PUBLIC_APP_URL }),
+    previewCampaign(db, toActor(member), id, { baseUrl: env().NEXT_PUBLIC_APP_URL, messageProvider: env().MESSAGE_PROVIDER }),
     db.offer.findMany({
       where: { campaignId: id },
       orderBy: { rank: "asc" },

@@ -21,7 +21,11 @@ export type Member = {
 export const getMember = cache(async (): Promise<Member | null> => {
   const session = await readSession();
   if (!session) return null;
+  return loadMember(session);
+});
 
+/** Builds a Member from session ids, re-checking the membership and location. Shared by the web session and app device tokens. */
+export async function loadMember(session: { userId: string; organizationId: string; locationId: string }): Promise<Member | null> {
   const membership = await db.membership.findUnique({
     where: { userId_organizationId: { userId: session.userId, organizationId: session.organizationId } },
     select: {
@@ -39,7 +43,7 @@ export const getMember = cache(async (): Promise<Member | null> => {
   if (!location) return null;
 
   return { user: membership.user, organization: membership.organization, location, role: membership.role };
-});
+}
 
 export async function requireMember(): Promise<Member> {
   const member = await getMember();
