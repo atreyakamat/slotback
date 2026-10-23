@@ -26,3 +26,15 @@ Comment 💇 for salon or 🩺 for clinic and we'll show you how SlotBack works 
 Which myth did you believe? Be honest 👇
 DM "DEMO" to see how SlotBack refills cancelled slots.
 #salonowner #clinicowner #goabusiness #beautyindustry #smallbusinessindia #goa
+
+## 5 · 5 messages that win slots back
+Someone cancelled. Here's exactly what to send. 📲
+5 copy-paste messages: the offer, the rebook, the reminder, the waitlist invite and the kind no. Save this 🔖 and use it today.
+Want the editable versions with your business name? DM "KIT" and we'll send the free Empty Slot Rescue Kit.
+#salonowner #clinicowner #goabusiness #whatsappbusiness #smallbusinesstips #appointments #goa
+
+## 6 · A cancellation policy clients won't hate
+Strict policies scare clients. No policy costs you money. Here's the middle ground. ⚖️
+5 rules, plus a 3-line policy you can copy today.
+DM "KIT" for the free policy writer, or "DEMO" to see how SlotBack refills the slot anyway.
+#salonbusiness #physio #skinclinic #beautybusiness #cancellationpolicy #goa #smallbusinessindia

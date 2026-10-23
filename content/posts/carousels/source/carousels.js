@@ -12,6 +12,13 @@ const mythSlide=(n,m,t)=>`<span class="tag" style="align-self:flex-start">MYTH #
 <div class="glass red" style="padding:50px 54px;margin-top:34px"><div style="font-weight:800;font-size:26px;letter-spacing:.14em;color:#FF8A7A">MYTH</div><div class="myth" style="margin-top:14px;text-decoration:line-through;text-decoration-color:#FF5A4A;text-decoration-thickness:10px">${m}</div></div>
 <div class="glass lime" style="padding:50px 54px;margin-top:28px"><div style="font-weight:800;font-size:26px;letter-spacing:.14em">TRUTH</div><h3 style="margin-top:14px;font-size:58px">${t}</h3></div>`;
 
+const msgSlide=(n,when,title,text)=>`<div style="display:flex;align-items:center;gap:26px"><div class="num">${n}</div><div><div class="kick" style="margin:0">${when}</div><h2 style="font-size:76px">${title}</h2></div></div>
+<div class="bub" style="margin-top:60px">${text}<small>✓✓ Sent from your phone</small></div>
+<div class="glass" style="margin-top:34px;padding:24px 34px;font-weight:700;font-size:30px;display:flex;justify-content:space-between;align-items:center"><span>Swap in your name + time</span><span class="pill g" style="margin:0">COPY IT</span></div>`;
+const ruleSlide=(n,title,desc,badge)=>`<div style="display:flex;align-items:flex-end;gap:30px"><div class="rank">${n}</div><span class="tag" style="margin-bottom:30px">RULE ${n} OF 5</span></div>
+<h2 style="margin-top:44px">${title}</h2><p class="p">${desc}</p>
+<div class="glass lime" style="margin-top:50px;padding:40px;text-align:center;font-family:AB;font-size:64px;letter-spacing:-.03em">${badge}</div>`;
+
 window.CAROUSELS=[
 {name:"money-leak",seed:3,rings:[[700,180,760],[4100,500,900]],orbs:[[860,920,260],[2050,120,180],[3180,1000,220],[5300,140,240],[6300,950,200]],slides:[
 `<div class="kick">Example · ₹1,000 slot</div><h1>A client<br>just <span class="l">cancelled.</span></h1><p class="p" style="max-width:780px">Here's where the money actually goes, and how to get it back.</p>${swipe("Swipe to see the damage")}`,
@@ -64,4 +71,25 @@ mythSlide(4,"“It's too techy for my staff.”","Mark the slot as cancelled. Sl
 `<div class="kick">Recap</div><h2>Myths, busted.</h2>
 <div style="display:flex;flex-direction:column;gap:18px;margin-top:50px">${["Just bad luck","Deposits solve it","Clients hate links","Too techy"].map(t=>`<div class="glass item" style="justify-content:space-between"><span class="strike" style="color:rgba(245,239,225,.6)">${t}</span><span class="pill g" style="margin:0">BUSTED</span></div>`).join('')}</div>`,
 CTA("Ready to refill<br>every slot?","Which myth did you believe? Tell us in the comments.")]},
+
+{name:"rescue-messages",seed:13,rings:[[820,200,700],[3300,800,760],[5600,-150,820]],orbs:[[880,1040,210],[2150,160,200],[4300,1080,230],[6400,260,200]],slides:[
+`<div class="kick">Copy · paste · fill the slot</div><h1>5 messages<br>that win<br><span class="l">slots back.</span></h1><p class="p">Save this. Use it the next time someone cancels.</p>${swipe("Swipe for the scripts")}`,
+msgSlide(1,"Right after a cancel","The offer","Hi! A 4:30 PM slot just opened at Glow Studio today. Want it? Reply YES and it's yours. First reply gets it 🙌"),
+msgSlide(2,"To the client who cancelled","The rebook","No worries at all! Want me to move you to another day this week? I'll hold the best time for you."),
+msgSlide(3,"24 hours before","The reminder","See you tomorrow at 4:30 PM! If plans change, just reply here so we can give the slot to someone on our waitlist 💚"),
+msgSlide(4,"When a slot is full","The waitlist invite","That time's booked, but want me to add you to our waitlist? If anything opens earlier, you'll hear first."),
+msgSlide(5,"After someone else claims it","The kind no","So sorry, that slot just got taken! You're still on the waitlist, and you'll be first for the next one."),
+CTA("Or let SlotBack<br>send them for you.","Free templates + cost calculator: link in bio. Or DM “DEMO”.")]},
+
+{name:"fair-policy",seed:17,rings:[[-150,300,760],[2600,-100,780],[5000,700,800]],orbs:[[860,1000,220],[1950,180,210],[3900,1050,200],[6200,200,230]],slides:[
+`<div class="kick">Fair to you · fair to them</div><h1>A cancellation<br>policy clients<br><span class="l">won't hate.</span></h1>${swipe("Swipe for the 5 rules")}`,
+ruleSlide(1,"Pick one notice window.","24 hours works for most. Physio and skin clinics often use 12.","24 HOURS"),
+ruleSlide(2,"Say it before they book.","On the booking message, your bio and a card at reception. No surprises.","NO SURPRISES"),
+ruleSlide(3,"Keep the fee simple.","A deposit or 50% of the service. Never a mystery number.","50% OR DEPOSIT"),
+ruleSlide(4,"Give one free pass.","Life happens. The first late cancel is on you. It earns loyalty.","1 FREE PASS"),
+ruleSlide(5,"Refill, then refund.","If someone from your waitlist takes the slot, waive the fee. Everyone wins.","FILLED = NO FEE"),
+`<div class="kick">Copy this</div><h2>Your policy,<br>in 3 lines.</h2>
+<div class="bub" style="margin-top:50px;font-size:38px">Please give us 24 hours' notice to cancel or move your booking.<br><br>Later than that, we keep a 50% fee, unless we refill your slot.<br><br>Your first late cancel is on us 💚</div>
+<p class="p" style="font-size:34px">Write yours in 10 seconds with our free policy writer. Link in bio.</p>`,
+CTA("Then fill the slot<br>anyway.","SlotBack sends your waitlist a claim link the moment someone cancels.")]},
 ];

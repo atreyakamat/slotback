@@ -1,5 +1,7 @@
 # Content
 
+Start with [SUMMARY.md](SUMMARY.md): every asset, doc link and open item in one place.
+
 Marketing content for SlotBack, kept apart from the app. Nothing in here is built, linted or typechecked by the app's CI.
 
 | Folder | What goes in it |
@@ -10,6 +12,8 @@ Marketing content for SlotBack, kept apart from the app. Nothing in here is buil
 | `brand/` | Logo files and brand source |
 | [`deck/`](deck) | Pitch deck: PDF, slide PNGs and HTML source. |
 | [`research/`](research) | Market research, the Goa lead pipeline and the prospect guide. |
+| [`profile/`](profile) | Instagram profile kit: highlight covers, pinned posts, link-in-bio page, bio copy. |
+| [`print/`](print) | Walk-in flyer (A5) and table card (A6), print-ready PDFs. |
 
 **Brand:** ink `#07140F`, green `#0F2E22`, green light `#1A4434`, lime `#C6F432`, cream `#F5EFE1`, muted `#8FA89B`. Fonts are Archivo Black for display and Inter Tight 500/700/800 for body. The woff2 files are in `reels/studio/public/fonts/`.
 
