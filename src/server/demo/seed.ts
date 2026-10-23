@@ -282,7 +282,7 @@ async function seedRecoveryHistory(db: PrismaClient, input: HistoryInput) {
   for (const appt of cancelled) {
     const roll = rand();
     if (roll < 0.15) continue; // Cancelled before the salon started using SlotBack for every opening.
-    const outcome = roll < 0.3 ? "EXPIRED" : "CLAIMED";
+    const outcome = roll < 0.6 ? "EXPIRED" : "CLAIMED";
 
     const cancelledAt = appt.cancelledAt ?? new Date(appt.startAt.getTime() - 3 * 3600_000);
     const launchedAt = new Date(cancelledAt.getTime() + (2 + Math.floor(rand() * 5)) * MINUTE);

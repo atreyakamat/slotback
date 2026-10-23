@@ -421,7 +421,10 @@ model Lead {
   city      String?
   vertical  String?
   message   String?
+  /// HMAC of the submitter's IP, only for rate limiting. The raw IP is never stored.
+  ipHash    String?  @map("ip_hash")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([ipHash, createdAt])
   @@map("leads")
 }

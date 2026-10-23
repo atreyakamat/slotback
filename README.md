@@ -4,6 +4,19 @@
 
 India-first, piloting in Goa. Product scope lives in the PRD; this repository is the demo-ready MVP.
 
+## What's in the app
+
+- **Landing page** (`/`) with a Book-a-demo form, FAQ and privacy page
+- **Today**: recovered revenue for the last 30 days, fill rate, latest recoveries, today's bookings by staff member
+- **Schedule**: day grid and week list; book, move, complete, mark no-show, cancel
+- **Recovery**: cancel and refill, ranked audience with reasons, message preview, batched offers, live status
+- **Claim page** (`/c/…`): what a customer sees from WhatsApp/SMS, first to confirm wins
+- **Waitlist**: per-channel consent, preferred days and times
+- **Analytics**: recovered vs completed revenue, daily chart, funnel, CSV export
+- **Settings**: business rules (lead time, offer window, quiet hours), services, staff, activity log, demo reset
+
+To present it, follow [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
+
 ## Stack
 
 | Layer | Choice |
@@ -48,7 +61,8 @@ Database tests need their own database, e.g. `TEST_DATABASE_URL=postgresql://pos
 prisma/              schema, migrations, seed entry
 src/app/             routes: landing (/), /login, staff console (/app/*), /api/*
 src/components/      UI primitives, theme, app shell
-src/server/          server-only code: env, db, auth (session + DAL), actions, queries, demo seed
+src/server/          server-only code: env, db, auth (session + DAL), domain rules, messaging, actions, queries, demo seed
+netlify/functions/   scheduled job (every minute): expiry and message delivery
 src/lib/             shared pure helpers (time zones, money)
 tests/               Vitest unit and integration tests
 e2e/                 Playwright tests
@@ -67,7 +81,13 @@ These are enforced by the database, not only the UI:
 
 ## Demo data
 
-The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji. All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Owners of the demo workspace can reset it from **Settings**.
+The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji, with a month of bookings and recovery history so the dashboard opens with believable numbers (around a 50% fill rate). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Demo workspaces always use the simulated message provider, so nothing reaches a real phone. Owners can reset it from **Settings**.
+
+## Known limits (by design, for now)
+
+- Messaging is simulated. A real WhatsApp/SMS provider needs an account, templates and a spend decision.
+- Sign-in is the one-click demo login. Email sign-in for real businesses comes with the first pilot.
+- Claim links rely on 256-bit unguessable tokens; there is no per-IP rate limit on the claim page yet.
 
 ## Deployment
 

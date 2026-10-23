@@ -6,7 +6,8 @@ export class DomainError extends Error {
       | "invalid"
       | "conflict"
       | "forbidden"
-      | "invalid_transition",
+      | "invalid_transition"
+      | "rate_limited",
     message: string,
   ) {
     super(message);
