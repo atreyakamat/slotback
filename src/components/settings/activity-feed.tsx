@@ -33,6 +33,12 @@ const VERBS: Record<string, string> = {
   "resource.archived": "archived staff member",
   "resource.restored": "restored staff member",
   "location.settings_updated": "updated business settings",
+  "waitlist.self_joined": "joined the waitlist from the QR link:",
+  "waitlist.self_updated": "updated their waitlist preferences:",
+  "waitlist.imported": "imported clients to the waitlist",
+  "waitlist.join_link_reset": "reset the waitlist join link",
+  "organization.created": "created the business",
+  "organization.onboarded": "finished setting up the business",
   "demo.seeded": "Demo workspace was reset",
 };
 

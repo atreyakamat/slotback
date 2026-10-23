@@ -79,6 +79,8 @@ model Location {
   /// No customer messages between these local times ("HH:mm").
   quietHoursStart    String       @default("21:00") @map("quiet_hours_start")
   quietHoursEnd      String       @default("09:00") @map("quiet_hours_end")
+  /// Public code in the waitlist self-join link (/join/<code>). Created when first shared; rotating it retires old QR posters.
+  joinCode           String?      @unique @map("join_code")
   createdAt          DateTime     @default(now()) @map("created_at")
   organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   services           Service[]
@@ -432,4 +434,14 @@ model Lead {
 
   @@index([ipHash, createdAt])
   @@map("leads")
+}
+
+/// One row per rate-limited public action (keyed by purpose + hashed IP). Old rows can be deleted freely.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+  @@map("rate_limit_hits")
 }

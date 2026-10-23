@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { QrCode, Upload } from "lucide-react";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/app/page-header";
 import { Skeleton } from "@/components/app/skeleton";
 import { AddWaitlistDialog } from "@/components/waitlist/add-waitlist-dialog";
 import { ConsentChips } from "@/components/waitlist/consent-chips";
 import { RemoveFromWaitlist } from "@/components/waitlist/remove-button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Channel } from "@/generated/prisma/enums";
 import { formatDate } from "@/lib/time";
-import { requireMember } from "@/server/auth/dal";
+import { canManage, requireMember } from "@/server/auth/dal";
 import { getWaitlist } from "@/server/queries/campaigns";
 
 export const metadata: Metadata = { title: "Waitlist" };
@@ -42,11 +45,23 @@ async function Waitlist() {
       <PageHeader
         title="Waitlist"
         description={`${entries.length} waiting · ${consented} can be messaged`}
-        actions={<AddWaitlistDialog services={services} customers={customers} />}
+        actions={
+          <>
+            <Link href="/app/waitlist/share" className={buttonVariants({ variant: "secondary" })}>
+              <QrCode /> Share join link
+            </Link>
+            {canManage(member) ? (
+              <Link href="/app/waitlist/import" className={buttonVariants({ variant: "secondary" })}>
+                <Upload /> Import
+              </Link>
+            ) : null}
+            <AddWaitlistDialog services={services} customers={customers} />
+          </>
+        }
       />
       {entries.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted">
-          No one is waiting yet. Add customers who want an earlier or more convenient slot.
+          No one is waiting yet. Share your join link, import your regulars, or add customers who want an earlier slot.
         </Card>
       ) : (
         <Card className="overflow-x-auto">
