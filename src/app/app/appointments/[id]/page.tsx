@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppointmentActions } from "@/components/appointments/appointment-actions";
 import { Skeleton } from "@/components/app/skeleton";
 import { AppointmentStatusBadge } from "@/components/app/status-badge";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPaise } from "@/lib/money";
 import { formatDate, formatTime, localDateKey, localMinuteOfDay } from "@/lib/time";
@@ -88,7 +89,18 @@ async function Appointment({ params }: { params: PageProps<"/app/appointments/[i
             time={`${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`}
             resourceId={a.resourceId}
             resources={resources}
+            canRefill={a.status === "CANCELLED" && !a.recoveryCampaign && a.startAt > new Date()}
           />
+          {a.recoveryCampaign ? (
+            <Link href={`/app/campaigns/${a.recoveryCampaign.id}`} className={buttonVariants({ variant: "secondary", className: "w-fit" })}>
+              View recovery campaign <ArrowRight />
+            </Link>
+          ) : null}
+          {a.claim ? (
+            <Link href={`/app/campaigns/${a.claim.campaignId}`} className="text-sm text-accent hover:underline">
+              Booked by claiming a recovered opening →
+            </Link>
+          ) : null}
         </div>
 
         <Card>

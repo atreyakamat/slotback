@@ -1,5 +1,6 @@
 import type { AppointmentStatus } from "@/generated/prisma/client";
 import { recordAudit } from "./audit";
+import { closeCampaignsForBookedTime } from "./campaigns";
 import { DomainError, violatesConstraint } from "./errors";
 import { withTx, type Actor, type Db } from "./types";
 
@@ -86,6 +87,7 @@ export async function createAppointment(db: Db, actor: Actor, input: CreateAppoi
           valuePaise: service.pricePaise,
         },
       });
+      await closeCampaignsForBookedTime(tx, actor, input.resourceId, input.startAt, endAt);
       await recordAudit(tx, {
         organizationId: actor.organizationId,
         actorType: "USER",
@@ -124,6 +126,7 @@ export async function rescheduleAppointment(db: Db, actor: Actor, input: Resched
         where: { id: current.id },
         data: { resourceId: input.resourceId, startAt: input.startAt, endAt },
       });
+      await closeCampaignsForBookedTime(tx, actor, input.resourceId, input.startAt, endAt);
       await recordAudit(tx, {
         organizationId: actor.organizationId,
         actorType: "USER",

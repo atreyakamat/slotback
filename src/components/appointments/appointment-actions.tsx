@@ -1,8 +1,9 @@
 "use client";
 
-import { CalendarClock, Check, UserX, X } from "lucide-react";
+import { CalendarClock, Check, Send, UserX, X } from "lucide-react";
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { changeStatusAction, rescheduleAppointmentAction } from "@/server/actions/appointments";
+import { cancelAndRefillAction, refillAction } from "@/server/actions/campaigns";
 import { idle } from "@/server/actions/result-client";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,10 +18,13 @@ export function AppointmentActions({
   time,
   resourceId,
   resources,
+  canRefill,
 }: {
   id: string;
   status: AppointmentStatus;
   isPast: boolean;
+  /** Future, cancelled, and no campaign yet: offer it to the waitlist. */
+  canRefill: boolean;
   date: string;
   time: string;
   resourceId: string;
@@ -30,7 +34,7 @@ export function AppointmentActions({
   const [dialog, setDialog] = useState<"cancel" | "move" | null>(null);
   const close = useCallback(() => setDialog(null), []);
 
-  if (status === "CANCELLED") return null;
+  if (status === "CANCELLED") return canRefill ? <RefillButton id={id} /> : null;
 
   return (
     <div className="grid gap-3">
@@ -66,8 +70,13 @@ export function AppointmentActions({
       </div>
       <FormMessage state={statusState} />
 
-      <Dialog open={dialog === "cancel"} onClose={close} title="Cancel this appointment?" description="The time will show as an opening on the schedule.">
-        {dialog === "cancel" ? <CancelForm id={id} onDone={close} /> : null}
+      <Dialog
+        open={dialog === "cancel"}
+        onClose={close}
+        title={isPast ? "Cancel this appointment?" : "Cancel this appointment and try to refill the opening?"}
+        description={isPast ? undefined : "SlotBack will show you which waitlisted customers fit before anything is sent."}
+      >
+        {dialog === "cancel" ? <CancelForm id={id} onDone={close} canOffer={!isPast} /> : null}
       </Dialog>
       <Dialog open={dialog === "move"} onClose={close} title="Move appointment">
         {dialog === "move" ? <MoveForm id={id} date={date} time={time} resourceId={resourceId} resources={resources} onDone={close} /> : null}
@@ -76,28 +85,57 @@ export function AppointmentActions({
   );
 }
 
-function CancelForm({ id, onDone }: { id: string; onDone: () => void }) {
+function CancelForm({ id, onDone, canOffer }: { id: string; onDone: () => void; canOffer: boolean }) {
   const [state, action] = useActionState(changeStatusAction, idle);
+  const [refillState, refill] = useActionState(cancelAndRefillAction, idle);
   useEffect(() => {
     if (state.ok) onDone();
   }, [state, onDone]);
   return (
-    <form action={action} className="grid gap-4">
+    <form action={canOffer ? refill : action} className="grid gap-4">
       <input type="hidden" name="appointmentId" value={id} />
       <input type="hidden" name="to" value="CANCELLED" />
       <Field label="Reason (optional)" htmlFor="reason" hint="Helps you spot patterns later. Not shared with the customer.">
         <Textarea id="reason" name="reason" maxLength={200} placeholder="e.g. Feeling unwell" />
       </Field>
-      <FormMessage state={state} />
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onDone}>
-          Keep appointment
-        </Button>
-        <SubmitButton variant="danger" pendingLabel="Cancelling…">
-          Cancel appointment
-        </SubmitButton>
+      <FormMessage state={canOffer ? refillState : state} />
+      <div className="flex flex-wrap justify-end gap-2">
+        {canOffer ? (
+          <>
+            <SubmitButton variant="ghost" formAction={action}>
+              Cancel without refilling
+            </SubmitButton>
+            <SubmitButton pendingLabel="Cancelling…">
+              <Send /> Cancel and refill
+            </SubmitButton>
+          </>
+        ) : (
+          <>
+            <Button type="button" variant="ghost" onClick={onDone}>
+              Keep appointment
+            </Button>
+            <SubmitButton variant="danger" pendingLabel="Cancelling…">
+              Cancel appointment
+            </SubmitButton>
+          </>
+        )}
       </div>
     </form>
+  );
+}
+
+function RefillButton({ id }: { id: string }) {
+  const [state, action] = useActionState(refillAction, idle);
+  return (
+    <div className="grid gap-3">
+      <form action={action}>
+        <input type="hidden" name="appointmentId" value={id} />
+        <SubmitButton pendingLabel="Opening…">
+          <Send /> Offer this opening to the waitlist
+        </SubmitButton>
+      </form>
+      <FormMessage state={state} />
+    </div>
   );
 }
 

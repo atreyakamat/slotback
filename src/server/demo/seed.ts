@@ -85,6 +85,9 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
           timezone: TZ,
           currency: "INR",
           businessHours: hours,
+          // Wider than the default (21:00–09:00) so evening demos can show live offers.
+          quietHoursStart: "23:00",
+          quietHoursEnd: "07:00",
         },
       },
     },
@@ -136,6 +139,9 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
     customers.push(customer);
   }
 
+  // The two flexible waitlisters (see below) have no upcoming bookings, so they are always free.
+  const bookable = customers.filter((_, i) => i !== 2 && i !== 10);
+
   // Appointments: 14 days of history plus 7 days ahead, packed per staff member without overlaps.
   const today = localDateKey(now, TZ);
   const appointments: Prisma.AppointmentCreateManyInput[] = [];
@@ -161,7 +167,7 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
         }
         appointments.push({
           locationId: location.id,
-          customerId: pick(customers).id,
+          customerId: pick(inPast ? customers : bookable).id,
           serviceId: service.id,
           resourceId: member.id,
           startAt,
@@ -187,17 +193,22 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
   ];
   const serviceKeys = SERVICES.map((s) => s.key);
   for (let i = 0; i < 18; i++) {
-    const wantsAny = i % 6 === 5;
-    const days = rand() < 0.4 ? [] : [0, 1, 2, 3, 4, 5, 6].filter(() => rand() < 0.6);
+    // Two flexible regulars (any service, any day, any time) make sure a live demo always has
+    // someone to offer an opening to.
+    const flexible = i === 2 || i === 10;
+    const wantsAny = flexible || i % 6 === 5;
+    const days = flexible || rand() < 0.4 ? [] : [0, 1, 2, 3, 4, 5, 6].filter(() => rand() < 0.6);
     await db.waitlistEntry.create({
       data: {
         locationId: location.id,
         customerId: customers[i].id,
         serviceId: wantsAny ? null : services.get(pick(serviceKeys))!.id,
         preferredDays: days,
-        ...pick(windows),
+        ...(flexible ? { earliestMinute: 0, latestMinute: 1440 } : pick(windows)),
         expiresAt: zonedToUtc(addDays(today, 21), 0, TZ),
-        notes: i === 2 ? "Happy to come in at short notice" : null,
+        notes: flexible ? "Happy to come in at short notice" : null,
+        // Stagger join dates so ranking by "joined earliest" is visible.
+        createdAt: new Date(now.getTime() - (30 - i) * 24 * 3600_000),
       },
     });
   }

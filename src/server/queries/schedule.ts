@@ -66,6 +66,8 @@ export async function getAppointmentDetail(member: Member, id: string) {
       customer: { select: { id: true, name: true, phone: true, email: true } },
       service: { select: { id: true, name: true, durationMinutes: true } },
       resource: { select: { id: true, name: true } },
+      recoveryCampaign: { select: { id: true, status: true } },
+      claim: { select: { campaignId: true } },
     },
   });
   if (!appointment) return null;

@@ -55,9 +55,9 @@ test("staff can book, open, move and cancel an appointment", async ({ page }, te
   await expect(page.getByText("Moved")).toBeVisible();
 
   await page.getByRole("button", { name: "Cancel appointment" }).click();
-  const cancel = page.getByRole("dialog", { name: "Cancel this appointment?" });
+  const cancel = page.getByRole("dialog", { name: /try to refill the opening/ });
   await cancel.getByLabel("Reason (optional)").fill("E2E check");
-  await cancel.getByRole("button", { name: "Cancel appointment" }).click();
+  await cancel.getByRole("button", { name: "Cancel without refilling" }).click();
   await expect(cancel).toBeHidden();
   await expect(page.getByText("Cancelled", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("E2E check")).toBeVisible();

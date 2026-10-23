@@ -9,6 +9,10 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  /** Message provider for real (non-demo) workspaces. Demo workspaces always use the simulator. */
+  MESSAGE_PROVIDER: z.string().default("demo"),
+  /** Shared secret for the scheduled job endpoint. When unset, the endpoint refuses all calls. */
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export type Env = z.infer<typeof schema>;
