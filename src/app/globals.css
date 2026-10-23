@@ -93,6 +93,14 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   ::selection {
     background: var(--highlight);
     color: var(--highlight-foreground);
@@ -123,5 +131,179 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* ── Landing page motion, without an animation library ───────────────────
+   Everything here is decorative. Under reduced motion each effect shows its
+   finished state. */
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.rise-word {
+  display: inline-block;
+  animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+/* Reveal on scroll with CSS scroll timelines, so it needs no JavaScript.
+   Browsers without scroll timelines simply show the content. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 30%;
+  }
+}
+
+/* Words ink in as the statement scrolls past (browsers without scroll timelines show it solid). */
+@keyframes ink {
+  from {
+    opacity: 0.18;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@supports (animation-timeline: view()) {
+  .ink-text {
+    view-timeline-name: --ink;
+  }
+  .ink-text > span {
+    animation: ink linear both;
+    animation-timeline: --ink;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Stroke drawing tied to scroll: pair with pathLength="1" on the SVG path. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@supports (animation-timeline: view()) {
+  .draw {
+    stroke-dasharray: 1;
+    animation: draw linear both;
+    animation-timeline: --draw;
+    animation-range: var(--range, entry 40% cover 50%);
+  }
+  .draw-scope {
+    view-timeline-name: --draw;
+  }
+}
+
+/* Cursor spotlight for cards: the parent sets --x and --y on the hovered card. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), color-mix(in oklab, var(--highlight) 22%, transparent), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+/* A light that travels around a button's edge. */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes beam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+.beam {
+  position: relative;
+  isolation: isolate;
+}
+.beam::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--beam-angle), transparent 65%, var(--brand-cream) 85%, transparent);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: beam 3.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Fine film grain over the hero, drawn as an inline SVG so it costs no request. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-word,
+  .ink-text > span,
+  .beam::after {
+    animation: none !important;
+  }
+  .reveal,
+  .draw {
+    animation: none !important;
   }
 }

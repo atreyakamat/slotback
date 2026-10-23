@@ -1,35 +1,35 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
 import { BellOff, Link2, Lock, ShieldCheck, Sparkles, Workflow, Zap } from "lucide-react";
-import type { ReactNode } from "react";
+import type { PointerEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 function Cell({ className, icon, title, body, children }: { className?: string; icon: ReactNode; title: string; body: string; children?: ReactNode }) {
-  const reduce = useReducedMotion();
   return (
-    <motion.li
-      className={cn("group relative flex flex-col overflow-hidden rounded-3xl border bg-surface p-6", className)}
-      initial={reduce ? false : { opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    >
+    <li className={cn("reveal spotlight group flex flex-col overflow-hidden rounded-3xl border bg-surface p-6 transition-colors hover:border-accent/40", className)}>
       <span className="flex size-9 items-center justify-center rounded-xl bg-surface-raised text-accent">{icon}</span>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-muted">{body}</p>
       {children ? <div className="mt-6 flex flex-1 items-end">{children}</div> : null}
-    </motion.li>
+    </li>
   );
 }
 
 const BARS = [38, 52, 30, 64, 46, 78, 58];
 
+/** Feeds the pointer position to the hovered card so its spotlight follows the cursor. */
+function trackPointer(e: PointerEvent<HTMLUListElement>) {
+  const card = (e.target as HTMLElement).closest<HTMLElement>(".spotlight");
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty("--x", `${e.clientX - r.left}px`);
+  card.style.setProperty("--y", `${e.clientY - r.top}px`);
+}
+
 /** Feature grid with small, purposeful motion in each cell. */
 export function Bento() {
-  const reduce = useReducedMotion();
   return (
-    <ul className="grid gap-4 md:grid-cols-6">
+    <ul className="grid gap-4 md:grid-cols-6" onPointerMove={trackPointer}>
       <Cell
         className="md:col-span-4"
         icon={<Zap className="size-4" />}
@@ -78,14 +78,10 @@ export function Bento() {
       <Cell className="md:col-span-2" icon={<Sparkles className="size-4" />} title="Honest numbers" body="Recovered revenue, fill rate and time to refill. Estimates are kept apart from visits that happened.">
         <div className="flex h-20 w-full items-end gap-1.5" aria-hidden>
           {BARS.map((h, i) => (
-            <motion.span
+            <span
               key={i}
-              className="flex-1 rounded-t-[4px] bg-accent"
-              initial={reduce ? false : { height: 0 }}
-              whileInView={{ height: `${h}%` }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-              style={reduce ? { height: `${h}%` } : undefined}
+              className="flex-1 origin-bottom rounded-t-[4px] bg-accent transition-transform duration-500 group-hover:scale-y-110"
+              style={{ height: `${h}%`, transitionDelay: `${i * 40}ms` }}
             />
           ))}
         </div>

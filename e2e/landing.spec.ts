@@ -25,3 +25,10 @@ test("FAQ answers open in place", async ({ page }) => {
   await page.getByText("How do you count recovered revenue?").click();
   await expect(page.getByText(/we never count a message sent as money earned/i)).toBeVisible();
 });
+
+test("the estimate updates when a business type is picked", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Skin clinic" }).click();
+  await expect(page.getByRole("button", { name: "Skin clinic" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("₹22,733")).toBeVisible();
+});

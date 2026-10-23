@@ -1,7 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Phone } from "./phone";
 import { ClaimedScreen, StaffScreen, WhatsAppScreen } from "./story-screens";
@@ -29,17 +28,38 @@ const STEPS = [
 
 /** "How it works" as a pinned scroll story on large screens, and a simple sequence on phones. */
 export function PinnedStory() {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const markers = useRef<(HTMLDivElement | null)[]>([]);
   const [active, setActive] = useState(0);
-  useMotionValueEvent(scrollYProgress, "change", (p) => setActive(Math.min(STEPS.length - 1, Math.floor(p * STEPS.length))));
   const ActiveScreen = STEPS[active].Screen;
+
+  // One invisible marker per step; whichever crosses the middle of the viewport is the active step.
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.step));
+      },
+      { rootMargin: "-50% 0px -50% 0px" },
+    );
+    for (const el of markers.current) if (el) io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
     <>
       {/* Large screens: the phone stays pinned while the steps scroll past. */}
-      <div ref={ref} className="relative hidden md:block" style={{ height: `${STEPS.length * 90}vh` }}>
+      <div className="relative hidden md:block" style={{ height: `${STEPS.length * 90}vh` }}>
+        {STEPS.map((s, i) => (
+          <div
+            key={s.kicker}
+            ref={(el) => {
+              markers.current[i] = el;
+            }}
+            data-step={i}
+            className="absolute inset-x-0"
+            style={{ top: `${(i * 100) / STEPS.length}%`, height: `${100 / STEPS.length}%` }}
+            aria-hidden
+          />
+        ))}
         <div className="sticky top-0 flex h-dvh items-center">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] items-center gap-16 px-6">
             <ol className="grid gap-10">
@@ -53,18 +73,9 @@ export function PinnedStory() {
             </ol>
             <div className="relative">
               <Phone>
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={active}
-                    className="h-full"
-                    initial={reduce ? false : { opacity: 0, y: 24, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={reduce ? undefined : { opacity: 0, y: -24, scale: 0.98 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <ActiveScreen />
-                  </motion.div>
-                </AnimatePresence>
+                <div key={active} className="h-full motion-safe:animate-[swap-in_0.45s_cubic-bezier(0.22,1,0.36,1)]">
+                  <ActiveScreen />
+                </div>
               </Phone>
               <div className="mt-6 flex justify-center gap-2" aria-hidden>
                 {STEPS.map((s, i) => (

@@ -1,9 +1,9 @@
 "use client";
 
-import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "motion/react";
 import { MessageCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useCountUp, useInView, useReducedMotion } from "./use-motion";
 
 /** Columns are 30-minute slots from 10:00 to 18:00. */
 const COLS = 16;
@@ -29,7 +29,6 @@ export function SlotBoard() {
   const inView = useInView(ref, { amount: 0.4 });
   const [tick, setTick] = useState(0);
   const stage = (reduce ? 4 : tick % 5) as Stage;
-  const [rupees, setRupees] = useState(0);
 
   useEffect(() => {
     if (reduce || !inView) return;
@@ -38,13 +37,7 @@ export function SlotBoard() {
   }, [tick, inView, reduce]);
 
   // The recovered counter counts up when the slot fills, and resets with the loop.
-  useEffect(() => {
-    if (stage !== 4) return;
-    if (reduce) return;
-    const controls = animate(0, 1800, { duration: 1.1, ease: "easeOut", onUpdate: (v) => setRupees(Math.round(v)) });
-    return () => controls.stop();
-  }, [stage, reduce]);
-  const shown = reduce ? 1800 : stage === 4 ? rupees : 0;
+  const shown = useCountUp(stage === 4 ? 1800 : 0, { duration: 1100, from: 0 });
 
   const status =
     stage === 0
@@ -76,23 +69,21 @@ export function SlotBoard() {
                   const cancelled = isTarget && (stage === 1 || stage === 2 || stage === 3);
                   const refilled = isTarget && stage === 4;
                   return (
-                    <motion.div
+                    <div
                       key={b.c}
-                      layout
                       className={cn(
-                        "m-[2px] flex items-center overflow-hidden rounded-[5px] px-1.5 text-[10px] font-medium whitespace-nowrap",
+                        "m-[2px] flex motion-reduce:animate-none items-center overflow-hidden rounded-[5px] px-1.5 text-[10px] font-medium whitespace-nowrap",
                         cancelled
                           ? "border border-dashed border-brand-coral bg-brand-coral/10 text-brand-coral"
                           : refilled
                             ? "bg-brand-lime text-brand-ink"
                             : "bg-brand-green-light text-brand-cream/85",
+                        refilled && "animate-[pop_0.5s_ease-out]",
                       )}
                       style={{ gridColumn: `${b.c + 1} / span ${b.w}` }}
-                      animate={refilled && !reduce ? { scale: [1, 1.12, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.5 }}
                     >
                       {cancelled ? "Open" : refilled ? "Fatima" : b.who}
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -109,11 +100,9 @@ export function SlotBoard() {
               return (
                 <span key={initial + i} className="relative">
                   {stage === 2 && !reduce ? (
-                    <motion.span
-                      className="absolute inset-0 rounded-full border border-brand-lime"
-                      initial={{ scale: 1, opacity: 0.8 }}
-                      animate={{ scale: 1.9, opacity: 0 }}
-                      transition={{ duration: 1.2, delay: i * 0.15, repeat: Infinity, repeatDelay: 0.3 }}
+                    <span
+                      className="absolute inset-0 animate-[ripple_1.5s_ease-out_infinite] rounded-full border border-brand-lime opacity-0"
+                      style={{ animationDelay: `${i * 150}ms` } as CSSProperties}
                     />
                   ) : null}
                   <span
@@ -128,18 +117,9 @@ export function SlotBoard() {
               );
             })}
           </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={stage}
-              className="min-w-0 flex-1 truncate text-xs text-brand-cream/80"
-              initial={reduce ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? undefined : { opacity: 0, y: -6 }}
-              transition={{ duration: 0.25 }}
-            >
-              {status}
-            </motion.p>
-          </AnimatePresence>
+          <p key={stage} className="min-w-0 flex-1 truncate text-xs text-brand-cream/80 motion-safe:animate-[fade-up_0.3s_ease-out]">
+            {status}
+          </p>
         </div>
 
         <div className="mt-4 flex items-center justify-between rounded-2xl bg-brand-cream px-4 py-3 text-brand-ink">

@@ -2,17 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { BeforeAfter } from "@/components/marketing/before-after";
 import { Bento } from "@/components/marketing/bento";
 import { BookDemoForm } from "@/components/marketing/book-demo-form";
 import { ClosingCta } from "@/components/marketing/closing-cta";
 import { DevicePreview } from "@/components/marketing/device-preview";
 import { KineticHeadline } from "@/components/marketing/kinetic-headline";
 import { Marquee } from "@/components/marketing/marquee";
+import { MobileCta } from "@/components/marketing/mobile-cta";
+import { PilotTimeline } from "@/components/marketing/pilot-timeline";
 import { PinnedStory } from "@/components/marketing/pinned-story";
 import { RoiCalculator } from "@/components/marketing/roi-calculator";
 import { ScrollRevealText } from "@/components/marketing/scroll-reveal-text";
 import { SlotBoard } from "@/components/marketing/slot-board";
-import { SmoothScroll } from "@/components/marketing/smooth-scroll";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,7 +61,6 @@ function SectionIntro({ kicker, title, body }: { kicker: string; title: string; 
 export default function Home() {
   return (
     <div className="min-h-dvh">
-      <SmoothScroll />
       <header className="sticky top-0 z-30 bg-brand-green/90 text-brand-cream backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" aria-label="SlotBack home">
@@ -74,6 +75,9 @@ export default function Home() {
             </a>
             <a href="#features" className="hover:text-brand-cream">
               Features
+            </a>
+            <a href="#pilot" className="hover:text-brand-cream">
+              Pilot
             </a>
             <a href="#faq" className="hover:text-brand-cream">
               FAQ
@@ -91,8 +95,12 @@ export default function Home() {
       </header>
 
       <main className="overflow-x-clip">
-        <section className="relative bg-brand-green text-brand-cream">
-          <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-24 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
+        <section id="hero" className="grain relative bg-brand-green text-brand-cream">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+            <div className="absolute -top-40 -right-40 size-[36rem] rounded-full bg-brand-lime/10 blur-3xl" />
+            <div className="absolute -bottom-56 -left-40 size-[30rem] rounded-full bg-brand-green-light/60 blur-3xl" />
+          </div>
+          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-20">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-brand-cream/15 px-3 py-1 text-xs font-medium text-brand-lime">
                 <span className="size-1.5 rounded-full bg-brand-lime" aria-hidden /> Now onboarding salons and clinics in Goa
@@ -106,7 +114,7 @@ export default function Home() {
                 The first to confirm gets it, and you see exactly what you got back.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <a href="#demo" className={buttonVariants({ variant: "brand", size: "lg" })}>
+                <a href="#demo" className={cn(buttonVariants({ variant: "brand", size: "lg" }), "beam")}>
                   Book a demo <ArrowRight />
                 </a>
                 <Link
@@ -123,12 +131,35 @@ export default function Home() {
             </div>
             <SlotBoard />
           </div>
+          <ul className="relative mx-auto grid max-w-6xl grid-cols-3 gap-4 border-t border-brand-cream/10 px-4 py-8 sm:px-6">
+            {[
+              ["2 taps", "for your staff to refill a slot"],
+              ["1 tap", "for a client to claim it"],
+              ["0 apps", "for clients to install"],
+            ].map(([n, label]) => (
+              <li key={n}>
+                <p className="font-display text-2xl text-brand-lime sm:text-4xl">{n}</p>
+                <p className="mt-1 text-xs text-brand-cream/70 sm:text-sm">{label}</p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <Marquee />
 
         <section className="mx-auto max-w-6xl px-4 py-28 sm:px-6 sm:py-40">
           <ScrollRevealText text="A cancelled slot is revenue you already earned. Today it sits empty while your front desk works the phones. SlotBack gets it back in minutes." />
+        </section>
+
+        <section id="problem" className="mx-auto max-w-6xl px-4 pb-28 sm:px-6">
+          <SectionIntro
+            kicker="The problem"
+            title="The same cancellation, two ways."
+            body="Refilling a slot by phone eats your front desk’s afternoon and usually fails. Here’s the difference on a normal Saturday."
+          />
+          <div className="mt-12">
+            <BeforeAfter />
+          </div>
         </section>
 
         <section id="how" className="scroll-mt-16">
@@ -168,6 +199,19 @@ export default function Home() {
           />
           <div className="mt-16 pb-6">
             <DevicePreview />
+          </div>
+        </section>
+
+        <section id="pilot" className="scroll-mt-16 border-t">
+          <div className="mx-auto max-w-6xl px-4 py-28 sm:px-6">
+            <SectionIntro
+              kicker="How a pilot works"
+              title="Four weeks. Your numbers. Your call."
+              body="A short, assisted pilot with a clear end date, so you judge SlotBack on what it recovered for you."
+            />
+            <div className="mt-12">
+              <PilotTimeline />
+            </div>
           </div>
         </section>
 
@@ -233,6 +277,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <MobileCta />
     </div>
   );
 }
