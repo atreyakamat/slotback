@@ -7,6 +7,8 @@ import { reels } from "./series/reels";
 import { SeriesReelProps, SeriesReelVideo, seriesDuration } from "./series/SeriesReelVideo";
 import { KineticProps, KineticVideo, kineticDuration } from "./kinetic/KineticVideo";
 import { series04 } from "./kinetic/reels-04";
+import { PoolReelProps, PoolReelVideo, poolDuration } from "./pool/PoolReelVideo";
+import { poolReels } from "./pool/reels";
 
 const handle = delayRender("Loading fonts");
 fontsLoaded.then(() => continueRender(handle));
@@ -54,5 +56,16 @@ export const RemotionRoot: React.FC = () => (
         />
       ))}
     </Folder>
+    {/* Test pool: one composition; the reel is picked by props. */}
+    <Composition
+      id="PoolReel"
+      component={PoolReelVideo}
+      durationInFrames={poolDuration(poolReels[0].id)}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      defaultProps={{ reelId: poolReels[0].id } satisfies PoolReelProps}
+      calculateMetadata={({ props }) => ({ durationInFrames: poolDuration(props.reelId) })}
+    />
   </>
 );
