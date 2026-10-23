@@ -1,26 +1,81 @@
 @import "tailwindcss";
 
+/* Theme is driven by data-theme on <html> ("light" | "dark"), set before first paint by ThemeScript. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Semantic design tokens from the SlotBack PRD (section 6). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-raised: #f0f2f5;
+  --text: #151922;
+  --text-muted: #626b78;
+  --border: #e2e6eb;
+  --accent: #315efb;
+  --accent-foreground: #ffffff;
+  --success: #16794b;
+  --warning: #946200;
+  --danger: #b42318;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --background: #0b0d10;
+  --surface: #14171c;
+  --surface-raised: #1c2027;
+  --text: #f4f6f8;
+  --text-muted: #a4adba;
+  --border: #2a3039;
+  --accent: #7892ff;
+  --accent-foreground: #0b0d10;
+  --success: #4ad295;
+  --warning: #f2c66d;
+  --danger: #ff8178;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius-card: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background: var(--background);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* Subtle theme cross-fade; disabled for users who prefer reduced motion. */
+  html.theme-transition,
+  html.theme-transition * {
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-transition,
+    html.theme-transition * {
+      transition: none !important;
+    }
+  }
 }
