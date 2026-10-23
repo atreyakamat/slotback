@@ -60,7 +60,7 @@ async function ActivityLog({ searchParams }: { searchParams: PageProps<"/app/set
         )}
         <div className="mt-4 flex justify-between gap-3 border-t pt-4 text-sm">
           {cursor ? (
-            <Link href={filter === "all" ? "/app/settings/activity" : `/app/settings/activity?type=${filter}`} className="text-accent hover:underline">
+            <Link href={filter === "all" ? "/app/settings/activity" : `/app/settings/activity?type=${filter}`} className="text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
               ← Newest
             </Link>
           ) : (
@@ -69,7 +69,7 @@ async function ActivityLog({ searchParams }: { searchParams: PageProps<"/app/set
           {activity.nextCursor ? (
             <Link
               href={`/app/settings/activity?${new URLSearchParams({ ...(filter === "all" ? {} : { type: filter }), after: activity.nextCursor })}`}
-              className="text-accent hover:underline"
+              className="text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
             >
               Older →
             </Link>

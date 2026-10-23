@@ -56,7 +56,7 @@ async function Appointment({ params }: { params: PageProps<"/app/appointments/[i
         <ArrowLeft className="size-4" /> Schedule
       </Link>
       <div className="mb-8 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{a.customer?.name ?? "Walk-in"}</h1>
+        <h1 className="font-display text-2xl tracking-tight">{a.customer?.name ?? "Walk-in"}</h1>
         <AppointmentStatusBadge status={a.status} />
         {a.source === "RECOVERY" ? <Badge tone="accent">Recovered slot</Badge> : null}
       </div>
@@ -97,7 +97,7 @@ async function Appointment({ params }: { params: PageProps<"/app/appointments/[i
             </Link>
           ) : null}
           {a.claim ? (
-            <Link href={`/app/campaigns/${a.claim.campaignId}`} className="text-sm text-accent hover:underline">
+            <Link href={`/app/campaigns/${a.claim.campaignId}`} className="text-sm text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
               Booked by claiming a recovered opening →
             </Link>
           ) : null}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -16,6 +17,9 @@ import { BookDemoForm } from "@/components/marketing/book-demo-form";
 import { HeroDemo } from "@/components/marketing/hero-demo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const STEPS = [
   {
@@ -122,33 +126,43 @@ export default function Home() {
       </header>
 
       <main className="overflow-x-clip">
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24">
-          <div>
-            <p className="text-sm font-medium text-accent">Cancellation recovery for salons, spas and clinics</p>
-            <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-              Make every opening count.
-            </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted text-pretty">
-              When a client cancels, SlotBack offers that slot to the right person on your waitlist over WhatsApp or SMS.
-              The first to confirm gets it, and you see exactly what you got back.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#demo" className={buttonVariants({ size: "lg" })}>
-                Book a demo <ArrowRight />
-              </a>
-              <Link href="/login" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-                Try the live demo
-              </Link>
+        <section className="bg-brand-green text-brand-cream">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24">
+            <div>
+              <p className="text-sm font-medium text-brand-lime">Cancellation recovery for salons, spas and clinics</p>
+              <h1 className="mt-4 max-w-2xl font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
+                Make every opening count.
+              </h1>
+              <p className="mt-5 max-w-xl text-lg text-brand-cream/80 text-pretty">
+                When a client cancels, SlotBack offers that slot to the right person on your waitlist over WhatsApp or SMS.
+                The first to confirm gets it, and you see exactly what you got back.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="#demo" className={buttonVariants({ variant: "brand", size: "lg" })}>
+                  Book a demo <ArrowRight />
+                </a>
+                <Link
+                  href="/login"
+                  className={cn(
+                    buttonVariants({ variant: "secondary", size: "lg" }),
+                    "border-brand-cream/30 bg-transparent text-brand-cream hover:bg-brand-green-light",
+                  )}
+                >
+                  Try the live demo
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-brand-muted">
+                No setup needed for the demo. It’s a sample Goa salon you can click through.
+              </p>
             </div>
-            <p className="mt-4 text-sm text-muted">No setup needed for the demo. It’s a sample Goa salon you can click through.</p>
+            <HeroDemo />
           </div>
-          <HeroDemo />
         </section>
 
         <section className="border-y bg-surface">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
             <div className="md:col-span-1">
-              <h2 className="text-2xl font-semibold tracking-tight text-balance">A cancelled slot is revenue you already earned.</h2>
+              <h2 className="font-display text-2xl tracking-tight text-balance">A cancelled slot is revenue you already earned.</h2>
             </div>
             <ul className="grid gap-6 text-sm text-muted sm:grid-cols-3 md:col-span-2">
               <li>
@@ -168,7 +182,7 @@ export default function Home() {
         </section>
 
         <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
-          <h2 className="text-3xl font-semibold tracking-tight">How it works</h2>
+          <h2 className="font-display text-3xl tracking-tight">How it works</h2>
           <p className="mt-2 max-w-xl text-muted">Two taps for your staff. One tap for your client.</p>
           <ol className="mt-10 grid gap-4 md:grid-cols-3">
             {STEPS.map(({ icon: Icon, title, body }, i) => (
@@ -188,7 +202,7 @@ export default function Home() {
 
         <section id="features" className="scroll-mt-20 border-y bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-            <h2 className="text-3xl font-semibold tracking-tight">Built for a busy front desk</h2>
+            <h2 className="font-display text-3xl tracking-tight">Built for a busy front desk</h2>
             <p className="mt-2 max-w-xl text-muted">Calm, simple and careful with your clients’ trust.</p>
             <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map(({ icon: Icon, title, body }) => (
@@ -205,7 +219,7 @@ export default function Home() {
         <section id="demo" className="mx-auto grid max-w-6xl scroll-mt-20 gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <p className="text-sm font-medium text-accent">Now onboarding in Goa</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-balance">See it refill a real cancellation</h2>
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-balance">See it refill a real cancellation</h2>
             <p className="mt-3 text-muted text-pretty">
               We’re working with a small group of salons and clinics. In a 20-minute walkthrough we’ll show the full loop on
               your own services, and if it fits, set you up the same week.
@@ -229,7 +243,7 @@ export default function Home() {
 
         <section id="faq" className="scroll-mt-20 border-t bg-surface">
           <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-            <h2 className="text-3xl font-semibold tracking-tight">Questions</h2>
+            <h2 className="font-display text-3xl tracking-tight">Questions</h2>
             <div className="mt-8 divide-y border-y">
               {FAQ.map(({ q, a }) => (
                 <details key={q} className="group py-4">

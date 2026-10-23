@@ -16,7 +16,7 @@ export default function LoginPage() {
           <Logo className="text-lg" />
         </Link>
         <Card className="p-6">
-          <h1 className="text-lg font-semibold">Welcome to SlotBack</h1>
+          <h1 className="font-display text-xl">Welcome to SlotBack</h1>
           <p className="mt-1 text-sm text-muted">
             Explore a fictional Goa salon with a week of bookings and a ready waitlist. Nothing you do here messages a
             real person.

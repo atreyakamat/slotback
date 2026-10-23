@@ -86,7 +86,7 @@ async function Campaign({
       </Link>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-2xl tracking-tight">
           {service.name} · {formatTime(campaign.startAt, tz)}
         </h1>
         <Badge tone={status.tone}>{status.label}</Badge>
@@ -110,7 +110,7 @@ async function Campaign({
             </p>
             <Link
               href={`/app/appointments/${claim.appointment.id}`}
-              className="text-sm font-medium text-accent hover:underline"
+              className="text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
             >
               View appointment →
             </Link>

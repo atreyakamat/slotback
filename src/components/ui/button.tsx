@@ -8,6 +8,8 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-accent text-accent-foreground hover:bg-accent/90",
+        /** Lime with ink text: brand moments such as the landing hero. Readable in both themes. */
+        brand: "bg-highlight text-highlight-foreground hover:bg-highlight/85",
         secondary: "border bg-surface text-foreground hover:bg-surface-raised",
         ghost: "text-muted hover:bg-surface-raised hover:text-foreground",
         danger: "bg-danger text-white hover:bg-danger/90 dark:text-background",

@@ -37,7 +37,7 @@ async function Campaigns() {
       <Card className="p-10 text-center">
         <p className="font-medium">Your next recovered appointment starts here.</p>
         <p className="mt-1 text-sm text-muted">
-          Open any upcoming appointment on the <Link href="/app/schedule" className="text-accent hover:underline">schedule</Link>{" "}
+          Open any upcoming appointment on the <Link href="/app/schedule" className="text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">schedule</Link>{" "}
           and choose “Cancel and refill” when a customer cancels.
         </p>
       </Card>

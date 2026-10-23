@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CalendarCheck2, CalendarX2, Clock, MapPin, Phone, TimerOff } from "lucide-react";
 import { Skeleton } from "@/components/app/skeleton";
 import { ClaimForm } from "@/components/claim/claim-form";
+import { LogoMark } from "@/components/logo";
 import { Countdown } from "@/components/claim/countdown";
 import { formatDate, formatTime } from "@/lib/time";
 import { db } from "@/server/db";
@@ -22,7 +23,9 @@ export default function ClaimPage({ params }: PageProps<"/c/[token]">) {
       <Suspense fallback={<Skeleton className="h-96" />}>
         <Claim params={params} />
       </Suspense>
-      <p className="mt-auto pt-10 text-center text-xs text-muted">Sent securely by SlotBack on behalf of the business.</p>
+      <p className="mt-auto flex items-center justify-center gap-2 pt-10 text-xs text-muted">
+        <LogoMark className="size-4" /> Sent securely by SlotBack on behalf of the business.
+      </p>
     </main>
   );
 }
@@ -49,7 +52,7 @@ async function Claim({ params }: { params: PageProps<"/c/[token]">["params"] }) 
       <header>
         <p className="text-sm font-medium text-muted">{view.businessName}</p>
         {view.state === "available" ? (
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Hi {view.customerFirstName}, this opening is yours if you want it.</h1>
+          <h1 className="mt-1 font-display text-2xl tracking-tight">Hi {view.customerFirstName}, this opening is yours if you want it.</h1>
         ) : null}
       </header>
 

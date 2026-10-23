@@ -18,7 +18,7 @@ export function BookDemoForm() {
         <FormMessage state={state} />
         <p className="text-sm text-muted">
           In the meantime, you can click around the{" "}
-          <a href="/login" className="font-medium text-accent hover:underline">
+          <a href="/login" className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
             live demo
           </a>
           .

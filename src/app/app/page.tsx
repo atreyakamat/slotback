@@ -140,7 +140,7 @@ function RecoveryHero({ recovery, liveCampaigns, tz }: { recovery: Recovery; liv
               <dd className="mt-0.5 font-semibold tabular-nums">{m.cancellations}</dd>
             </div>
           </dl>
-          <Link href="/app/analytics" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+          <Link href="/app/analytics" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
             See analytics <ArrowRight className="size-3.5" aria-hidden />
           </Link>
         </div>
@@ -182,7 +182,7 @@ function DemoGuide() {
           <span className="font-medium">Try the recovery loop:</span> open any upcoming appointment on the schedule, choose
           “Cancel and refill”, send the offers, then claim the slot as a customer from the demo inbox or your phone.
         </p>
-        <Link href="/app/schedule" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+        <Link href="/app/schedule" className="inline-flex items-center gap-1 text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
           Open schedule <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </CardContent>

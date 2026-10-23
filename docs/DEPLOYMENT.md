@@ -21,7 +21,7 @@ SlotBack uses Supabase as plain Postgres for now. No Supabase API keys are neede
 | `DATABASE_URL` | Supabase transaction pooler string |
 | `DIRECT_URL` | Supabase session/direct string |
 | `SESSION_SECRET` | Output of `openssl rand -base64 32` |
-| `NEXT_PUBLIC_APP_URL` | Your Netlify URL, e.g. `https://slotback.netlify.app` |
+| `NEXT_PUBLIC_APP_URL` | `https://slotback.atreyakamat.dev` (no trailing slash) |
 | `DEMO_MODE` | `true` |
 | `CRON_SECRET` | Output of `openssl rand -base64 24`. Lets the every-minute job expire offers and send queued messages |
 | `MESSAGE_PROVIDER` | `demo` (simulated; nothing is sent to real phones until a provider is approved) |
@@ -39,12 +39,27 @@ SlotBack uses Supabase as plain Postgres for now. No Supabase API keys are neede
 - [ ] Run the recovery loop once end to end (see [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md)), including a claim from a real phone via the QR code
 - [ ] The `tick` function runs every minute
 - [ ] Submit the **Book a demo** form on the landing page and confirm the row appears in Supabase → Table editor → `leads`
-- [ ] Custom domain (optional) added in Netlify, then `NEXT_PUBLIC_APP_URL` updated and redeployed
+- [ ] `slotback.atreyakamat.dev` is the primary domain with a valid certificate (section 3)
 
 ## Where things live
 
 - **Demo requests:** Supabase → Table editor → `leads`. Submitters' IPs are never stored, only a keyed hash used for rate limiting (5 per hour).
 - **Audit trail:** in the app under **Settings → Activity**, or the `audit_events` table.
+
+## 3. Custom domain: slotback.atreyakamat.dev
+
+1. Netlify: **Domain management → Add a domain → `slotback.atreyakamat.dev`**. Netlify will say it's an external domain and show the target, e.g. `<your-site>.netlify.app`.
+2. At the DNS provider for `atreyakamat.dev`, add one record:
+
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| CNAME | `slotback` | `<your-site>.netlify.app` | Auto / 3600 |
+
+   If the domain is behind Cloudflare, set the record to **DNS only** (grey cloud) so Netlify can issue the certificate.
+3. Back in Netlify, wait for **HTTPS → Certificate** to show as provisioned (usually a few minutes; `.dev` domains are HTTPS-only, so the site won't load before this).
+4. Make `slotback.atreyakamat.dev` the **primary domain**, so the `.netlify.app` address redirects to it.
+5. Confirm `NEXT_PUBLIC_APP_URL=https://slotback.atreyakamat.dev`, then **Deploys → Trigger deploy → Clear cache and deploy site**. Claim links, QR codes, canonical URLs, social previews, `robots.txt` and `sitemap.xml` all use this value at build time.
+6. Check: `https://slotback.atreyakamat.dev/api/health` returns ok, and a fresh claim link in the demo starts with `https://slotback.atreyakamat.dev/c/`.
 
 ## Deploy previews
 

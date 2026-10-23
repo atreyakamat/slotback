@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 
 /** Server-rendered QR code for a claim link, so a demo audience can claim from their own phone. */
 export async function ClaimQr({ url, name }: { url: string; name: string }) {
-  const svg = await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#151922", light: "#ffffff" } });
+  const svg = await QRCode.toString(url, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#07140f", light: "#ffffff" } });
   const local = /^https?:\/\/(localhost|127\.|0\.0\.0\.0)/.test(url);
   return (
     <div className="mt-3 flex items-center gap-3">

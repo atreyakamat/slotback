@@ -28,8 +28,8 @@ export function HeroDemo() {
 
   return (
     <div className="relative mx-auto w-full max-w-sm">
-      <div className="absolute -inset-y-6 inset-x-0 -z-10 rounded-[2rem] bg-accent/10 blur-2xl sm:-inset-x-6" aria-hidden />
-      <div className="rounded-[1.75rem] border bg-surface p-4 shadow-xl shadow-black/5">
+      <div className="absolute -inset-y-6 inset-x-0 -z-10 rounded-[2rem] bg-brand-lime/15 blur-2xl sm:-inset-x-6" aria-hidden />
+      <div className="rounded-[1.75rem] border bg-surface p-4 text-foreground shadow-xl shadow-black/5">
         <div className="mb-4 flex items-center justify-between text-xs text-muted">
           <span className="font-medium text-foreground">Casa Verde Salon</span>
           <span>Today</span>

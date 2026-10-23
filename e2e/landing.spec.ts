@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test("a business owner can book a demo from the landing page", async ({ page }) => {
+  // A fresh client address per run, so repeated runs don't hit the 5-per-hour demo request limit.
+  const octet = () => Math.floor(Math.random() * 254) + 1;
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": `198.51.100.${octet()}, 10.0.0.${octet()}` });
   await page.goto("/");
   await page.getByRole("link", { name: "Book a demo" }).first().click();
   await expect(page).toHaveURL(/#demo$/);

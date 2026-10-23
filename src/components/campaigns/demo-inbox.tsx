@@ -36,7 +36,7 @@ export function DemoInbox({ messages }: { messages: Message[] }) {
                     href={new URL(link).pathname}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
+                    className="inline-flex items-center gap-1 font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
                     aria-label={`Open claim link as ${m.offer?.customer.name}`}
                   >
                     Open claim link <ExternalLink className="size-3.5" aria-hidden />

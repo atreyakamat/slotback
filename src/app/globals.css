@@ -3,34 +3,55 @@
 /* Theme is driven by data-theme on <html> ("light" | "dark"), set before first paint by ThemeScript. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Semantic design tokens from the SlotBack PRD (section 6). */
+/*
+ * SlotBack brand palette (matches the logo, Reel and Instagram story).
+ * Fixed brand colours never change with the theme; use them for brand moments (logo, hero).
+ */
 :root {
-  --background: #f7f8fa;
-  --surface: #ffffff;
-  --surface-raised: #f0f2f5;
-  --text: #151922;
-  --text-muted: #626b78;
-  --border: #e2e6eb;
-  --accent: #315efb;
-  --accent-foreground: #ffffff;
-  --success: #16794b;
-  --warning: #946200;
+  --brand-ink: #07140f;
+  --brand-green: #0f2e22;
+  --brand-green-light: #1a4434;
+  --brand-lime: #c6f432;
+  --brand-cream: #f5efe1;
+  --brand-muted: #8fa89b;
+}
+
+/*
+ * Semantic tokens: every component uses these, never raw hex.
+ * Contrast checked (WCAG AA, 4.5:1 for text) against background, surface and raised surface in both themes.
+ * Lime is a fill or highlight only in light mode: as text on cream it is ~1.1:1 and unreadable.
+ */
+:root {
+  --background: #f5efe1; /* cream */
+  --surface: #fffcf5;
+  --surface-raised: #ede6d4;
+  --text: #07140f; /* ink */
+  --text-muted: #56675d;
+  --border: #dcd3be;
+  --accent: #0f2e22; /* green: primary buttons, links, focus, chart marks */
+  --accent-foreground: #f5efe1;
+  --highlight: #c6f432; /* lime: fills behind ink text, live dots, brand moments */
+  --highlight-foreground: #07140f;
+  --success: #17733f;
+  --warning: #855700;
   --danger: #b42318;
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --background: #0b0d10;
-  --surface: #14171c;
-  --surface-raised: #1c2027;
-  --text: #f4f6f8;
-  --text-muted: #a4adba;
-  --border: #2a3039;
-  --accent: #7892ff;
-  --accent-foreground: #0b0d10;
-  --success: #4ad295;
+  --background: #07140f; /* ink */
+  --surface: #0f2e22; /* green */
+  --surface-raised: #1a4434; /* green light */
+  --text: #f5efe1; /* cream */
+  --text-muted: #a3b8ac;
+  --border: #24503e;
+  --accent: #c6f432; /* lime */
+  --accent-foreground: #07140f;
+  --highlight: #c6f432;
+  --highlight-foreground: #07140f;
+  --success: #5bd99a;
   --warning: #f2c66d;
-  --danger: #ff8178;
+  --danger: #ff8f85;
   color-scheme: dark;
 }
 
@@ -43,10 +64,20 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-light: var(--brand-green-light);
+  --color-brand-lime: var(--brand-lime);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-muted: var(--brand-muted);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Display face for page titles and the landing page only. */
+  --font-display: var(--font-archivo-black), var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --radius-card: 14px;
 }
 
@@ -59,6 +90,10 @@
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--highlight);
+    color: var(--highlight-foreground);
   }
   :focus-visible {
     outline: 2px solid var(--accent);

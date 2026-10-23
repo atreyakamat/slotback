@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 
-export const metadata: Metadata = { title: "Privacy" };
+export const metadata: Metadata = { title: "Privacy", alternates: { canonical: "/privacy" } };
 
 export default function PrivacyPage() {
   return (
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <Link href="/" aria-label="SlotBack home">
         <Logo />
       </Link>
-      <h1 className="mt-10 text-3xl font-semibold tracking-tight">Privacy</h1>
+      <h1 className="mt-10 font-display text-3xl tracking-tight">Privacy</h1>
       <p className="mt-2 text-sm text-muted">Plain-language summary for the SlotBack pilot.</p>
 
       <div className="mt-8 grid gap-6 text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-semibold [&_p]:mt-1.5 [&_p]:text-muted">
