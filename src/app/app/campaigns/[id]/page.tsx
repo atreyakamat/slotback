@@ -272,6 +272,7 @@ async function Campaign({
             eligibleRemaining={eligible.length}
             batchSize={rules.offerBatchSize}
             hasOutstandingOffers={outstanding}
+            autoRounds={detail.location.autoNextRound ? { left: Math.max(0, detail.location.maxRounds - campaign.roundsSent) } : null}
           />
           <DemoInbox messages={demoMessages} />
         </div>

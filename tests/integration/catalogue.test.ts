@@ -65,6 +65,8 @@ describe.skipIf(!hasTestDb)("catalogue and customers", () => {
         offerBatchSize: 5,
         quietHoursStart: "21:00",
         quietHoursEnd: "09:00",
+        autoNextRound: true,
+        maxRounds: 3,
       }),
     ).rejects.toMatchObject({ code: "invalid" });
   });

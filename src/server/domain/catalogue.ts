@@ -133,6 +133,8 @@ export type LocationSettingsInput = {
   offerBatchSize: number;
   quietHoursStart: string;
   quietHoursEnd: string;
+  autoNextRound: boolean;
+  maxRounds: number;
 };
 
 export async function updateLocationSettings(db: Db, actor: Actor, input: LocationSettingsInput) {

@@ -95,6 +95,8 @@ export type Campaign = {
   staff: string;
   valuePaise: number;
   batchSize: number;
+  /** Automatic rounds still to come, or null when the business sends rounds by hand. */
+  autoRoundsLeft: number | null;
   quietUntil: string | null;
   message: string;
   nextUp: string[];

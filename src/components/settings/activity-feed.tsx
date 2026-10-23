@@ -15,6 +15,7 @@ const VERBS: Record<string, string> = {
   "campaign.created": "opened a refill for",
   "campaign.launched": "sent offers for",
   "campaign.round_sent": "sent more offers for",
+  "campaign.auto_round_sent": "Next round of offers went out for",
   "campaign.stopped": "stopped offering",
   "campaign.claimed": "claimed",
   "campaign.expired": "Offers expired for",

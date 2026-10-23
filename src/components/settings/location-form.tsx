@@ -25,6 +25,8 @@ export function LocationForm({
     offerBatchSize: number;
     quietHoursStart: string;
     quietHoursEnd: string;
+    autoNextRound: boolean;
+    maxRounds: number;
   };
   disabled: boolean;
 }) {
@@ -102,6 +104,16 @@ export function LocationForm({
             </Field>
             <Field label="Quiet hours end" htmlFor="quietHoursEnd" error={err.quietHoursEnd} hint="No customer messages in between.">
               <TextInput id="quietHoursEnd" name="quietHoursEnd" type="time" defaultValue={location.quietHoursEnd} />
+            </Field>
+            <label className="flex items-start gap-3 text-sm sm:col-span-2">
+              <input type="checkbox" name="autoNextRound" defaultChecked={location.autoNextRound} className="mt-0.5 size-4 accent-[var(--accent)]" />
+              <span>
+                <span className="font-medium">Send the next round automatically</span>
+                <span className="block text-muted">If nobody claims before the offers expire, the next people in line get it. No tap needed.</span>
+              </span>
+            </label>
+            <Field label="Most rounds per opening" htmlFor="maxRounds" error={err.maxRounds} hint="Includes the first one.">
+              <TextInput id="maxRounds" name="maxRounds" type="number" min={1} max={10} defaultValue={location.maxRounds} />
             </Field>
           </CardContent>
         </Card>

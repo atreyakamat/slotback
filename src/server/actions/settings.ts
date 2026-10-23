@@ -104,6 +104,8 @@ const locationSchema = z
     offerBatchSize: z.coerce.number().int().min(1).max(50),
     quietHoursStart: hm,
     quietHoursEnd: hm,
+    autoNextRound: z.preprocess((v) => v === "on", z.boolean()),
+    maxRounds: z.coerce.number().int().min(1).max(10),
   })
   .strip();
 

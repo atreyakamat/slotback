@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Channel } from "@/generated/prisma/client";
 import { zonedToUtc } from "@/lib/time";
 import { changeAppointmentStatus, createAppointment } from "@/server/domain/appointments";
-import { claimOffer, expireDue, openCampaign, previewCampaign, sendRound, stopCampaign, viewOffer } from "@/server/domain/campaigns";
+import { advanceRounds, claimOffer, expireDue, openCampaign, previewCampaign, sendRound, stopCampaign, viewOffer } from "@/server/domain/campaigns";
 import { setConsent } from "@/server/domain/waitlist";
 import { processOutbox } from "@/server/messaging/outbox";
 import { ProviderError } from "@/server/messaging/provider";
@@ -299,5 +299,71 @@ describe.skipIf(!hasTestDb)("cancellation recovery", () => {
       }
     }
     expect(calls).toBe(5);
+  });
+
+  it("sends the next round by itself when a round closes unclaimed, up to the round cap", async () => {
+    await clearWaitlist();
+    await db.location.update({ where: { id: f.actor.locationId }, data: { offerBatchSize: 2, autoNextRound: true, maxRounds: 3 } });
+    try {
+      const date = nextDate();
+      const now = ist(date, "11:00");
+      const people = [];
+      for (const n of ["Amar", "Bela", "Chirag", "Divya", "Eshan"]) people.push(await waitlisted(`${n} Auto`));
+      const campaign = await cancelledSlot(date, "15:00", now);
+      const advance = (at: Date) => advanceRounds(db, { baseUrl: BASE, now: at, locationId: f.actor.locationId });
+
+      await sendRound(db, f.actor, campaign.id, { baseUrl: BASE, now });
+      // Offers are still open, so nothing more goes out.
+      expect(await advance(new Date(now.getTime() + 10 * 60_000))).toEqual({ roundsSent: 0, skipped: 0 });
+
+      const afterFirst = new Date(now.getTime() + 31 * 60_000);
+      await expireDue(db, afterFirst);
+      expect(await advance(afterFirst)).toEqual({ roundsSent: 1, skipped: 0 });
+      // Running it twice in a row never doubles up.
+      expect(await advance(afterFirst)).toEqual({ roundsSent: 0, skipped: 0 });
+
+      let offers = await db.offer.findMany({ where: { campaignId: campaign.id }, orderBy: { rank: "asc" } });
+      expect(offers.map((o) => o.customerId)).toEqual(people.slice(0, 4).map((p) => p.id));
+      const audit = await db.auditEvent.findFirst({ where: { entityId: campaign.id, action: "campaign.auto_round_sent" } });
+      expect(audit).toMatchObject({ actorType: "SYSTEM", actorId: null });
+
+      const afterSecond = new Date(afterFirst.getTime() + 31 * 60_000);
+      await expireDue(db, afterSecond);
+      expect(await advance(afterSecond)).toEqual({ roundsSent: 1, skipped: 0 });
+      offers = await db.offer.findMany({ where: { campaignId: campaign.id } });
+      expect(offers).toHaveLength(5);
+      expect((await db.recoveryCampaign.findUniqueOrThrow({ where: { id: campaign.id } })).roundsSent).toBe(3);
+
+      // Cap reached: a fourth round never goes out, even with someone new on the waitlist.
+      await waitlisted("Farah Late");
+      const afterThird = new Date(afterSecond.getTime() + 31 * 60_000);
+      await expireDue(db, afterThird);
+      expect(await advance(afterThird)).toEqual({ roundsSent: 0, skipped: 0 });
+    } finally {
+      await db.location.update({ where: { id: f.actor.locationId }, data: { offerBatchSize: 5, maxRounds: 3 } });
+    }
+  });
+
+  it("leaves rounds to staff when automatic rounds are off, and skips openings with nobody left", async () => {
+    await clearWaitlist();
+    const date = nextDate();
+    const now = ist(date, "11:00");
+    await waitlisted("Gita Manual");
+    const campaign = await cancelledSlot(date, "15:00", now);
+    await sendRound(db, f.actor, campaign.id, { baseUrl: BASE, now });
+    const later = new Date(now.getTime() + 31 * 60_000);
+    await expireDue(db, later);
+
+    // Nobody else fits, so the automatic round is skipped and the campaign keeps running.
+    expect(await advanceRounds(db, { baseUrl: BASE, now: later, locationId: f.actor.locationId })).toEqual({ roundsSent: 0, skipped: 1 });
+
+    await waitlisted("Hari Manual");
+    await db.location.update({ where: { id: f.actor.locationId }, data: { autoNextRound: false } });
+    try {
+      expect(await advanceRounds(db, { baseUrl: BASE, now: later, locationId: f.actor.locationId })).toEqual({ roundsSent: 0, skipped: 0 });
+      expect((await db.recoveryCampaign.findUniqueOrThrow({ where: { id: campaign.id } })).status).toBe("ACTIVE");
+    } finally {
+      await db.location.update({ where: { id: f.actor.locationId }, data: { autoNextRound: true } });
+    }
   });
 });

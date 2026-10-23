@@ -125,6 +125,10 @@ model Location {
   /// No customer messages between these local times ("HH:mm").
   quietHoursStart String             @default("21:00") @map("quiet_hours_start")
   quietHoursEnd   String             @default("09:00") @map("quiet_hours_end")
+  /// When a round closes unclaimed, offer the slot to the next people in line without staff action.
+  autoNextRound   Boolean            @default(true) @map("auto_next_round")
+  /// Most rounds a campaign sends, counting the first one staff start.
+  maxRounds       Int                @default(3) @map("max_rounds")
   /// Public code in the waitlist self-join link (/join/<code>). Created when first shared; rotating it retires old QR posters.
   joinCode        String?            @unique @map("join_code")
   createdAt       DateTime           @default(now()) @map("created_at")
@@ -331,6 +335,7 @@ model RecoveryCampaign {
   endAt         DateTime       @map("end_at")
   valuePaise    Int            @map("value_paise")
   status        CampaignStatus @default(DRAFT)
+  roundsSent    Int            @default(0) @map("rounds_sent")
   /// Eligibility rules in force at launch, for auditability.
   rulesSnapshot Json           @map("rules_snapshot")
   expiresAt     DateTime?      @map("expires_at")

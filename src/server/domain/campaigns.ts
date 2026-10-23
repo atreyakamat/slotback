@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma/client";
+import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { addDays, localDateKey, parseHm, zonedToUtc } from "@/lib/time";
 import { providerFor } from "../messaging/registry";
 import { confirmationMessage, confirmationTemplate, offerMessage, offerTemplate } from "../messaging/templates";
@@ -16,6 +16,8 @@ export type RulesSnapshot = {
   quietHoursEnd: string;
   timezone: string;
 };
+
+const OPEN_OFFER = ["QUEUED", "SENT", "DELIVERED", "OPENED"] as const;
 
 export type LaunchOptions = { baseUrl: string; now?: Date; messageProvider?: string };
 
@@ -138,101 +140,154 @@ function offerExpiry(sendAt: Date, rules: RulesSnapshot, campaignExpiresAt: Date
   return new Date(Math.min(sendAt.getTime() + rules.offerTtlMinutes * 60_000, campaignExpiresAt.getTime()));
 }
 
+/** Who a round is sent on behalf of: a staff member, or SlotBack itself for automatic rounds. */
+type RoundBy = { organizationId: string; locationId: string; userId: string | null };
+
+type CampaignRow = Awaited<ReturnType<typeof loadCampaign>>;
+
 /**
  * Sends the next round of offers: the top-ranked eligible customers who haven't been offered
  * this slot yet. Offers and their outbox messages are written in one transaction, so a saved
  * campaign and its notifications can never diverge.
  */
 export async function sendRound(db: Db, actor: Actor, campaignId: string, opts: LaunchOptions) {
-  const now = opts.now ?? new Date();
   return withTx(db, async (tx) => {
     const campaign = await loadCampaign(tx, actor, campaignId);
-    if (campaign.status !== "DRAFT" && campaign.status !== "ACTIVE") {
-      throw new DomainError("invalid_transition", "This campaign is no longer running.");
-    }
-    const rules = campaign.rulesSnapshot as unknown as RulesSnapshot;
-    const sendAt = nextSendTime(now, rules);
-    if (!campaign.expiresAt || sendAt >= campaign.expiresAt) {
-      throw new DomainError(
-        "invalid",
-        sendAt > now
-          ? "Quiet hours end too close to the appointment to offer it. Handle this slot manually."
-          : "It's too close to the appointment to offer it to the waitlist.",
-      );
-    }
-
-    // Lock the campaign row so two staff pressing "launch" can't send duplicate rounds.
-    await tx.$queryRaw`SELECT id FROM recovery_campaigns WHERE id = ${campaign.id} FOR UPDATE`;
-
-    const [location, service, resource, candidates] = await Promise.all([
-      loadLocation(tx, actor.locationId),
-      tx.service.findUniqueOrThrow({ where: { id: campaign.serviceId } }),
-      tx.resource.findUniqueOrThrow({ where: { id: campaign.resourceId } }),
-      loadCandidates(tx, slotOf(campaign), campaign.id, now),
-    ]);
-    const provider = providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider });
-    const chosen = evaluateCandidates(slotOf(campaign), rules.timezone, candidates, provider.channels)
-      .filter((e): e is Extract<Evaluated, { eligible: true }> => e.eligible)
-      .slice(0, rules.offerBatchSize);
-    if (chosen.length === 0) {
-      throw new DomainError("conflict", "No matching customers are available right now. Add to the waitlist or handle this slot manually.");
-    }
-
-    const expiresAt = offerExpiry(sendAt, rules, campaign.expiresAt);
-    const priorOffers = await tx.offer.count({ where: { campaignId: campaign.id } });
-
-    const offerVars = {
-      businessName: location.organization.name,
-      serviceName: service.name,
-      staffName: resource.name,
-      startAt: campaign.startAt,
-      expiresAt,
-      timezone: rules.timezone,
-    };
-    for (const [i, e] of chosen.entries()) {
-      const { token, hash } = generateClaimToken();
-      const offer = await tx.offer.create({
-        data: {
-          campaignId: campaign.id,
-          customerId: e.candidate.customerId,
-          waitlistEntryId: e.candidate.waitlistEntryId,
-          channel: e.channel,
-          rank: priorOffers + i + 1,
-          tokenHash: hash,
-          expiresAt,
-        },
-      });
-      await tx.outboxMessage.create({
-        data: {
-          locationId: actor.locationId,
-          offerId: offer.id,
-          channel: e.channel,
-          provider: provider.name,
-          toAddress: e.address,
-          body: offerMessage({ ...offerVars, customerName: e.candidate.name, link: `${opts.baseUrl}/c/${token}` }),
-          template: e.channel === "WHATSAPP" ? offerTemplate({ ...offerVars, customerName: e.candidate.name, token }) : undefined,
-          nextAttemptAt: sendAt,
-          idempotencyKey: `offer:${offer.id}`,
-        },
-      });
-    }
-
-    const launching = campaign.status === "DRAFT";
-    await tx.recoveryCampaign.update({
-      where: { id: campaign.id },
-      data: { status: "ACTIVE", launchedAt: launching ? now : undefined },
-    });
-    await recordAudit(tx, {
-      organizationId: actor.organizationId,
-      actorType: "USER",
-      actorId: actor.userId,
-      entityType: "campaign",
-      entityId: campaign.id,
-      action: launching ? "campaign.launched" : "campaign.round_sent",
-      metadata: { offers: chosen.length, delayedForQuietHours: sendAt > now },
-    });
-    return { offers: chosen.length, sendAt, expiresAt };
+    return writeRound(tx, { organizationId: actor.organizationId, locationId: actor.locationId, userId: actor.userId }, campaign, opts);
   });
+}
+
+async function writeRound(tx: Prisma.TransactionClient, by: RoundBy, campaign: CampaignRow, opts: LaunchOptions) {
+  const now = opts.now ?? new Date();
+  if (campaign.status !== "DRAFT" && campaign.status !== "ACTIVE") {
+    throw new DomainError("invalid_transition", "This campaign is no longer running.");
+  }
+  const rules = campaign.rulesSnapshot as unknown as RulesSnapshot;
+  const sendAt = nextSendTime(now, rules);
+  if (!campaign.expiresAt || sendAt >= campaign.expiresAt) {
+    throw new DomainError(
+      "invalid",
+      sendAt > now
+        ? "Quiet hours end too close to the appointment to offer it. Handle this slot manually."
+        : "It's too close to the appointment to offer it to the waitlist.",
+    );
+  }
+
+  // Lock the campaign row so two staff pressing "launch" can't send duplicate rounds.
+  await tx.$queryRaw`SELECT id FROM recovery_campaigns WHERE id = ${campaign.id} FOR UPDATE`;
+
+  const [location, service, resource, candidates] = await Promise.all([
+    loadLocation(tx, by.locationId),
+    tx.service.findUniqueOrThrow({ where: { id: campaign.serviceId } }),
+    tx.resource.findUniqueOrThrow({ where: { id: campaign.resourceId } }),
+    loadCandidates(tx, slotOf(campaign), campaign.id, now),
+  ]);
+  const provider = providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider });
+  const chosen = evaluateCandidates(slotOf(campaign), rules.timezone, candidates, provider.channels)
+    .filter((e): e is Extract<Evaluated, { eligible: true }> => e.eligible)
+    .slice(0, rules.offerBatchSize);
+  if (chosen.length === 0) {
+    throw new DomainError("conflict", "No matching customers are available right now. Add to the waitlist or handle this slot manually.");
+  }
+
+  const expiresAt = offerExpiry(sendAt, rules, campaign.expiresAt);
+  const priorOffers = await tx.offer.count({ where: { campaignId: campaign.id } });
+
+  const offerVars = {
+    businessName: location.organization.name,
+    serviceName: service.name,
+    staffName: resource.name,
+    startAt: campaign.startAt,
+    expiresAt,
+    timezone: rules.timezone,
+  };
+  for (const [i, e] of chosen.entries()) {
+    const { token, hash } = generateClaimToken();
+    const offer = await tx.offer.create({
+      data: {
+        campaignId: campaign.id,
+        customerId: e.candidate.customerId,
+        waitlistEntryId: e.candidate.waitlistEntryId,
+        channel: e.channel,
+        rank: priorOffers + i + 1,
+        tokenHash: hash,
+        expiresAt,
+      },
+    });
+    await tx.outboxMessage.create({
+      data: {
+        locationId: by.locationId,
+        offerId: offer.id,
+        channel: e.channel,
+        provider: provider.name,
+        toAddress: e.address,
+        body: offerMessage({ ...offerVars, customerName: e.candidate.name, link: `${opts.baseUrl}/c/${token}` }),
+        template: e.channel === "WHATSAPP" ? offerTemplate({ ...offerVars, customerName: e.candidate.name, token }) : undefined,
+        nextAttemptAt: sendAt,
+        idempotencyKey: `offer:${offer.id}`,
+      },
+    });
+  }
+
+  const launching = campaign.status === "DRAFT";
+  await tx.recoveryCampaign.update({
+    where: { id: campaign.id },
+    data: { status: "ACTIVE", launchedAt: launching ? now : undefined, roundsSent: { increment: 1 } },
+  });
+  await recordAudit(tx, {
+    organizationId: by.organizationId,
+    actorType: by.userId ? "USER" : "SYSTEM",
+    actorId: by.userId ?? undefined,
+    entityType: "campaign",
+    entityId: campaign.id,
+    action: launching ? "campaign.launched" : by.userId ? "campaign.round_sent" : "campaign.auto_round_sent",
+    metadata: { offers: chosen.length, round: campaign.roundsSent + 1, delayedForQuietHours: sendAt > now },
+  });
+  return { offers: chosen.length, sendAt, expiresAt };
+}
+
+/**
+ * Sends the next round for running campaigns whose last round closed unclaimed, where the
+ * business has automatic rounds on and the round cap isn't reached. Run on a schedule.
+ * A campaign that can't send (nobody left who fits, or too close to the slot) is skipped
+ * and waits for staff or expiry.
+ */
+export async function advanceRounds(db: PrismaClient, opts: LaunchOptions & { locationId?: string }) {
+  const now = opts.now ?? new Date();
+  const due = await db.recoveryCampaign.findMany({
+    where: {
+      locationId: opts.locationId,
+      status: "ACTIVE",
+      expiresAt: { gt: now },
+      location: { autoNextRound: true },
+      offers: { none: { status: { in: [...OPEN_OFFER] } } },
+    },
+    include: { appointment: { select: { customerId: true } }, location: { select: { organizationId: true, maxRounds: true } } },
+    take: 50,
+  });
+  let sent = 0;
+  let skipped = 0;
+  for (const c of due) {
+    if (c.roundsSent >= c.location.maxRounds) continue;
+    try {
+      const result = await db.$transaction(async (tx) => {
+        // Re-check under the row lock: staff may have sent a round or stopped it since the scan.
+        await tx.$queryRaw`SELECT id FROM recovery_campaigns WHERE id = ${c.id} FOR UPDATE`;
+        const fresh = await tx.recoveryCampaign.findUniqueOrThrow({
+          where: { id: c.id },
+          include: { appointment: { select: { customerId: true } } },
+        });
+        const open = await tx.offer.count({ where: { campaignId: c.id, status: { in: [...OPEN_OFFER] } } });
+        if (fresh.status !== "ACTIVE" || open > 0 || fresh.roundsSent >= c.location.maxRounds) return null;
+        return writeRound(tx, { organizationId: c.location.organizationId, locationId: c.locationId, userId: null }, fresh, opts);
+      });
+      if (result) sent++;
+    } catch (err) {
+      if (!(err instanceof DomainError)) throw err;
+      skipped++;
+    }
+  }
+  return { roundsSent: sent, skipped };
 }
 
 /** Staff stops offering an opening. Outstanding links stop working immediately. */
@@ -255,8 +310,6 @@ export async function stopCampaign(db: Db, actor: Actor, campaignId: string) {
     });
   });
 }
-
-const OPEN_OFFER = ["QUEUED", "SENT", "DELIVERED", "OPENED"] as const;
 
 async function expireOpenOffers(db: Db, campaignId: string, status: "EXPIRED" | "LOST" = "EXPIRED") {
   await db.offer.updateMany({ where: { campaignId, status: { in: [...OPEN_OFFER] } }, data: { status } });

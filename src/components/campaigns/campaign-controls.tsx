@@ -13,12 +13,15 @@ export function CampaignControls({
   eligibleRemaining,
   batchSize,
   hasOutstandingOffers,
+  autoRounds,
 }: {
   campaignId: string;
   status: CampaignStatus;
   eligibleRemaining: number;
   batchSize: number;
   hasOutstandingOffers: boolean;
+  /** Automatic rounds left after this one, or null when automatic rounds are off. */
+  autoRounds: { left: number } | null;
 }) {
   const [sendState, send] = useActionState(sendRoundAction, idle);
   const [stopState, stop] = useActionState(stopCampaignAction, idle);
@@ -44,6 +47,11 @@ export function CampaignControls({
           </SubmitButton>
         </form>
       </div>
+      {status === "ACTIVE" && hasOutstandingOffers && eligibleRemaining > 0 && autoRounds && autoRounds.left > 0 ? (
+        <p className="text-sm text-muted">
+          If nobody claims before these offers close, SlotBack offers it to the next {next} automatically.
+        </p>
+      ) : null}
       <FormMessage state={sendState.message ? sendState : stopState} />
     </div>
   );

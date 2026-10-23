@@ -50,6 +50,8 @@ async function General() {
           offerBatchSize: location.offerBatchSize,
           quietHoursStart: location.quietHoursStart,
           quietHoursEnd: location.quietHoursEnd,
+          autoNextRound: location.autoNextRound,
+          maxRounds: location.maxRounds,
         }}
       />
       {member.organization.isDemo && member.role === "OWNER" ? (

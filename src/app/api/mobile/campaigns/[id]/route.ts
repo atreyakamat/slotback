@@ -18,6 +18,7 @@ export const GET = mobileRoute<{ id: string }>(async ({ member, params }) => {
     staff: d.resource.name,
     valuePaise: d.campaign.valuePaise,
     batchSize: d.rules.offerBatchSize,
+    autoRoundsLeft: d.location.autoNextRound ? Math.max(0, d.location.maxRounds - d.campaign.roundsSent) : null,
     quietUntil: d.quiet ? d.sendAt : null,
     message: d.message,
     nextUp: eligible.filter((e) => !e.candidate.alreadyOffered).slice(0, d.rules.offerBatchSize).map((e) => e.candidate.name),

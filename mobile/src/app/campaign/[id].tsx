@@ -82,10 +82,17 @@ export default function CampaignScreen() {
           <Text variant="title">{rupees(data.valuePaise)}</Text>
         </Row>
         {data.status === "ACTIVE" && roundEndsAt ? (
-          <Row style={{ marginTop: space(4) }}>
-            <PulseDot />
-            <Text style={{ fontWeight: "700" }}>Offered to {openOffers.length}. Links close in {countdown(roundEndsAt, now)}</Text>
-          </Row>
+          <>
+            <Row style={{ marginTop: space(4) }}>
+              <PulseDot />
+              <Text style={{ fontWeight: "700" }}>Offered to {openOffers.length}. Links close in {countdown(roundEndsAt, now)}</Text>
+            </Row>
+            {data.autoRoundsLeft && data.nextUp.length > 0 ? (
+              <Text tone="muted" variant="small" style={{ marginTop: space(2) }}>
+                If nobody claims by then, the next {data.nextUp.length} get it automatically.
+              </Text>
+            ) : null}
+          </>
         ) : null}
         {data.status === "EXPIRED" ? <Text tone="muted" style={{ marginTop: space(3) }}>Nobody claimed it before the slot got too close.</Text> : null}
         {data.status === "CANCELLED" ? <Text tone="muted" style={{ marginTop: space(3) }}>You stopped offering this slot.</Text> : null}
