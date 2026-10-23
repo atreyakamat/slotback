@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isId } from "@/lib/ids";
 import { Suspense } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { AppointmentActions } from "@/components/appointments/appointment-actions";
@@ -35,6 +36,7 @@ export default function AppointmentPage({ params }: PageProps<"/app/appointments
 async function Appointment({ params }: { params: PageProps<"/app/appointments/[id]">["params"] }) {
   const member = await requireMember();
   const { id } = await params;
+  if (!isId(id)) notFound();
   const detail = await getAppointmentDetail(member, id);
   if (!detail) notFound();
   const { appointment: a, history, resources } = detail;

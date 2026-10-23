@@ -2,14 +2,14 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { parseHm, zonedToUtc } from "@/lib/time";
+import { isDateKey, parseHm, zonedToUtc } from "@/lib/time";
 import { requireMember, toActor } from "../auth/dal";
 import { db } from "../db";
 import { changeAppointmentStatus, createAppointment, rescheduleAppointment } from "../domain/appointments";
 import { createCustomer, normalizeIndianPhone } from "../domain/customers";
 import { fromError, fromZod, type ActionState } from "./result";
 
-const dateKey = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date");
+const dateKey = z.string().refine(isDateKey, "Pick a date");
 const hm = z.string().regex(/^\d{2}:\d{2}$/, "Pick a time");
 
 const createSchema = z

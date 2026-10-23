@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { Role } from "@/generated/prisma/client";
 import { db } from "../db";
-import type { Actor } from "../domain/types";
+import type { Actor, Db } from "../domain/types";
 import { readSession } from "./session";
 
 export type Member = {
@@ -24,25 +24,36 @@ export const getMember = cache(async (): Promise<Member | null> => {
   return loadMember(session);
 });
 
-/** Builds a Member from session ids, re-checking the membership and location. Shared by the web session and app device tokens. */
-export async function loadMember(session: { userId: string; organizationId: string; locationId: string }): Promise<Member | null> {
-  const membership = await db.membership.findUnique({
+/**
+ * Builds a Member from session ids, re-checking the membership and location. Shared by the web
+ * session and app device tokens. Web sessions also pass the version they were issued with, and
+ * are refused once the user has signed out everywhere since.
+ */
+export async function loadMember(session: {
+  userId: string;
+  organizationId: string;
+  locationId: string;
+  sessionVersion?: number;
+}, client: Db = db): Promise<Member | null> {
+  const membership = await client.membership.findUnique({
     where: { userId_organizationId: { userId: session.userId, organizationId: session.organizationId } },
     select: {
       role: true,
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, sessionVersion: true } },
       organization: { select: { id: true, name: true, isDemo: true, onboardedAt: true } },
     },
   });
   if (!membership) return null;
+  if (session.sessionVersion !== undefined && session.sessionVersion !== membership.user.sessionVersion) return null;
 
-  const location = await db.location.findFirst({
+  const location = await client.location.findFirst({
     where: { id: session.locationId, organizationId: session.organizationId },
     select: { id: true, name: true, timezone: true, currency: true },
   });
   if (!location) return null;
 
-  return { user: membership.user, organization: membership.organization, location, role: membership.role };
+  const { id, name, email } = membership.user;
+  return { user: { id, name, email }, organization: membership.organization, location, role: membership.role };
 }
 
 export async function requireMember(): Promise<Member> {

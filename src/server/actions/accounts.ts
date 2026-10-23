@@ -5,10 +5,15 @@ import { normalizeEmail } from "../domain/accounts";
 import { VERTICAL_OPTIONS, type Vertical } from "../domain/verticals";
 import { sendSignInLink } from "../auth/sign-in-links";
 import { saveSignupIntent } from "../auth/signup-intent";
+import { db } from "../db";
+import { enforce, LIMITS } from "../security/rate-limit";
+import { keyHash, limitByIp } from "../security/request";
 import { fromError, fromZod, type ActionState } from "./result";
 
 /** Adds the dev-only sign-in link, shown on screen when emails aren't being sent. */
 export type SignInState = ActionState & { devLink?: string; email?: string };
+
+const TOO_MANY = "Too many sign-in requests. Please wait a few minutes and try again.";
 
 const email = z.email("Enter a valid email address.").max(160).transform(normalizeEmail);
 
@@ -16,6 +21,8 @@ export async function requestSignInAction(_prev: SignInState, form: FormData): P
   const parsed = z.object({ email }).safeParse(Object.fromEntries(form));
   if (!parsed.success) return fromZod(parsed.error);
   try {
+    await limitByIp("sign-in", LIMITS.signInPerIp, TOO_MANY);
+    await enforce(db, `sign-in:email:${keyHash(parsed.data.email)}`, LIMITS.signInPerEmail, TOO_MANY);
     const delivery = await sendSignInLink(parsed.data.email);
     return {
       ok: true,
@@ -48,6 +55,8 @@ export async function signUpAction(_prev: SignInState, form: FormData): Promise<
   if (!parsed.success) return fromZod(parsed.error);
   if (parsed.data.website) return { ok: true, message: "Check your email for a link to finish setting up." };
   try {
+    await limitByIp("sign-up", LIMITS.signUpPerIp, "Too many sign-ups from this connection. Please try again later.");
+    await enforce(db, `sign-in:email:${keyHash(parsed.data.email)}`, LIMITS.signInPerEmail, TOO_MANY);
     const data = parsed.data;
     await saveSignupIntent({
       email: data.email,

@@ -10,13 +10,13 @@ beforeAll(() => {
 describe("session tokens", () => {
   it("round-trips a signed session", async () => {
     const { signSession, verifySession } = await import("@/server/auth/session");
-    const token = await signSession({ userId: "u1", organizationId: "o1", locationId: "l1" });
-    expect(await verifySession(token)).toEqual({ userId: "u1", organizationId: "o1", locationId: "l1" });
+    const token = await signSession({ userId: "u1", organizationId: "o1", locationId: "l1" }, 0);
+    expect(await verifySession(token)).toEqual({ userId: "u1", organizationId: "o1", locationId: "l1", sessionVersion: 0 });
   });
 
   it("rejects a tampered token", async () => {
     const { signSession, verifySession } = await import("@/server/auth/session");
-    const token = await signSession({ userId: "u1", organizationId: "o1", locationId: "l1" });
+    const token = await signSession({ userId: "u1", organizationId: "o1", locationId: "l1" }, 0);
     const [h, p, s] = token.split(".");
     const forged = Buffer.from(JSON.stringify({ userId: "attacker", organizationId: "o1", locationId: "l1" })).toString(
       "base64url",

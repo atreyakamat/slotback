@@ -1,10 +1,9 @@
 "use server";
 
-import { headers } from "next/headers";
 import { z } from "zod";
 import { db } from "../db";
-import { createLead, hashIp, VERTICALS } from "../domain/leads";
-import { env } from "../env";
+import { createLead, VERTICALS } from "../domain/leads";
+import { requestIpHash } from "../security/request";
 import { fromError, fromZod, type ActionState } from "./result";
 
 const optional = (max: number) =>
@@ -42,10 +41,8 @@ export async function bookDemoAction(_prev: ActionState, formData: FormData): Pr
   }
   const input = { ...parsed.data, website: undefined };
 
-  const h = await headers();
-  const ip = h.get("x-nf-client-connection-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   try {
-    await createLead(db, input, { ipHash: ip ? hashIp(ip, env().SESSION_SECRET) : null });
+    await createLead(db, input, { ipHash: await requestIpHash() });
     return { ok: true, message: THANKS };
   } catch (err) {
     return fromError(err);

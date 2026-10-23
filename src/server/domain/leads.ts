@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { normalizeIndianPhone } from "./customers";
 import { DomainError } from "./errors";
 import type { Db } from "./types";
@@ -17,10 +16,7 @@ export type LeadInput = {
 
 const PER_HOUR = 5;
 
-/** Keyed hash so the same IP can be rate limited without the IP itself ever being stored. */
-export function hashIp(ip: string, secret: string) {
-  return createHmac("sha256", secret).update(ip).digest("hex");
-}
+export { hashIp } from "../security/client-ip";
 
 /** Stores a "book a demo" request. Requires a reachable contact and limits repeat submissions per IP. */
 export async function createLead(db: Db, input: LeadInput, ctx: { ipHash: string | null; now?: Date }) {

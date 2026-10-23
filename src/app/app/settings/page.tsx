@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { RotateCcw } from "lucide-react";
+import { AccountCard } from "@/components/app/account-card";
 import { Skeleton } from "@/components/app/skeleton";
 import { LocationForm } from "@/components/settings/location-form";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -15,6 +16,12 @@ export const metadata: Metadata = { title: "Settings" };
 export default function SettingsPage() {
   return (
     <div className="grid gap-4">
+      {/* Phones don't show the sidebar, so the account and sign-out live here too. */}
+      <div className="lg:hidden">
+        <Suspense fallback={<div className="h-[62px] rounded-lg border bg-surface" />}>
+          <AccountCard />
+        </Suspense>
+      </div>
       <Card>
         <CardHeader>
           <div>

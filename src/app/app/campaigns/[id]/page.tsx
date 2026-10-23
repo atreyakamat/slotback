@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isId } from "@/lib/ids";
 import { Suspense } from "react";
 import { ArrowLeft, CheckCircle2, Clock, PartyPopper } from "lucide-react";
 import { Skeleton } from "@/components/app/skeleton";
@@ -49,6 +50,7 @@ async function Campaign({
 }) {
   const member = await requireMember();
   const { id } = await params;
+  if (!isId(id)) notFound();
   const detail = await getCampaignDetail(member, id);
   if (!detail) notFound();
   const {

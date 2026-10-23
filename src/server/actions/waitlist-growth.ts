@@ -1,15 +1,13 @@
 "use server";
 
-import { headers } from "next/headers";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { parseCsv } from "@/lib/csv";
 import { canManage, requireMember, toActor } from "../auth/dal";
 import { db } from "../db";
 import { DomainError } from "../domain/errors";
-import { hashIp } from "../domain/leads";
+import { requestIpHash } from "../security/request";
 import { type ImportResult, importWaitlist, mapImportRows, rotateJoinCode, selfJoin, TIME_WINDOWS, type TimeWindow } from "../domain/waitlist-growth";
-import { env } from "../env";
 import { fromError, fromZod, type ActionState } from "./result";
 
 const joinSchema = z.object({
@@ -19,12 +17,6 @@ const joinSchema = z.object({
   window: z.enum(Object.keys(TIME_WINDOWS) as [TimeWindow, ...TimeWindow[]]).default("any"),
   website: z.string().max(0).optional(),
 });
-
-async function clientIpHash() {
-  const h = await headers();
-  const ip = h.get("x-nf-client-connection-ip") ?? h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return ip ? hashIp(ip, env().SESSION_SECRET) : null;
-}
 
 /** What the client typed, sent back on an error so the form keeps it after React resets it. */
 export type JoinValues = { name: string; phone: string; serviceId: string; window: string; days: string[]; channels: string[] };
@@ -56,7 +48,7 @@ export async function selfJoinAction(code: string, _prev: JoinState, form: FormD
         days: form.getAll("days").map(Number).filter(Number.isInteger),
         channels: [...channels],
       },
-      { ipHash: await clientIpHash() },
+      { ipHash: await requestIpHash() },
     );
   } catch (err) {
     return { ...fromError(err), values };

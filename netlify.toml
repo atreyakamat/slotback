@@ -14,10 +14,5 @@
 [context.production]
   command = "pnpm db:deploy && pnpm build"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+# Security headers (CSP, HSTS, framing, etc.) are set in next.config.ts so they apply everywhere,
+# including local runs and tests.

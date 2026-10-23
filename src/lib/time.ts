@@ -85,3 +85,11 @@ export function formatDate(date: Date, timeZone: string, opts: Intl.DateTimeForm
     date,
   );
 }
+
+/** True for a real calendar date written as YYYY-MM-DD (rejects 2026-13-45, 2026-02-30 and the like). */
+export function isDateKey(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return y >= 2000 && y <= 2100 && date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+}

@@ -1,4 +1,5 @@
 import "server-only";
+import { isId } from "@/lib/ids";
 import { loadMember, type Member } from "../auth/dal";
 import { db } from "../db";
 import { resolveDevice } from "../domain/devices";
@@ -30,8 +31,11 @@ export function mobileRoute<P = Record<string, never>>(handler: (ctx: MobileCont
     const device = token ? await resolveDevice(db, token) : null;
     const member = device ? await loadMember(device) : null;
     if (!device || !member) return mobileError(401, "Signed out. Connect the app again from SlotBack on the web.");
+    const params = await ctx.params;
+    // Every path parameter in this API is a record id.
+    if (params && Object.values(params).some((v) => !isId(v))) return mobileError(404, "Not found.");
     try {
-      const data = await handler({ member, deviceId: device.deviceId, request, params: await ctx.params });
+      const data = await handler({ member, deviceId: device.deviceId, request, params });
       return Response.json(data ?? { ok: true }, { headers: { "Cache-Control": "no-store" } });
     } catch (err) {
       if (err instanceof DomainError) return mobileError(STATUS[err.code], err.message);
@@ -41,11 +45,18 @@ export function mobileRoute<P = Record<string, never>>(handler: (ctx: MobileCont
   };
 }
 
-/** Reads a JSON body, treating a missing or broken one as empty. */
+/** The app only ever sends a few short fields. */
+const MAX_BODY_BYTES = 16 * 1024;
+
+/** Reads a JSON body, treating a missing or broken one as empty. Oversized bodies are refused. */
 export async function readJson(request: Request): Promise<Record<string, unknown>> {
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) throw new DomainError("invalid", "That request is too large.");
+  const text = await request.text().catch(() => "");
+  if (text.length > MAX_BODY_BYTES) throw new DomainError("invalid", "That request is too large.");
   try {
-    const body = await request.json();
-    return body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+    const body = JSON.parse(text);
+    return body && typeof body === "object" && !Array.isArray(body) ? (body as Record<string, unknown>) : {};
   } catch {
     return {};
   }

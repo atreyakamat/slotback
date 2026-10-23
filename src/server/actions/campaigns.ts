@@ -8,6 +8,8 @@ import { requireMember, toActor } from "../auth/dal";
 import { db } from "../db";
 import { changeAppointmentStatus } from "../domain/appointments";
 import { claimOffer, openCampaign, sendRound, stopCampaign } from "../domain/campaigns";
+import { LIMITS } from "../security/rate-limit";
+import { limitByIp } from "../security/request";
 import { DomainError } from "../domain/errors";
 import { env } from "../env";
 import { processOutbox, retryMessage } from "../messaging/outbox";
@@ -99,6 +101,7 @@ export async function claimAction(_prev: ActionState, form: FormData): Promise<A
   const token = String(form.get("token") ?? "");
   let result;
   try {
+    await limitByIp("claim", LIMITS.claimPerIp, "Too many attempts. Please wait a few minutes, or call the business.");
     result = await claimOffer(db, token);
   } catch (err) {
     if (err instanceof DomainError) return { ok: false, message: err.message };

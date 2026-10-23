@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Skeleton } from "@/components/app/skeleton";
 import { ScheduleBoard } from "@/components/schedule/schedule-board";
 import { buttonVariants } from "@/components/ui/button";
-import { addDays, formatDate, formatTime, localDateKey, localMinuteOfDay, localWeekday, parseHm, zonedToUtc } from "@/lib/time";
+import { addDays, formatDate, formatTime, isDateKey, localDateKey, localMinuteOfDay, localWeekday, parseHm, zonedToUtc } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { requireMember } from "@/server/auth/dal";
 import { getSchedule } from "@/server/queries/schedule";
@@ -27,7 +27,7 @@ async function Schedule({ searchParams }: { searchParams: PageProps<"/app/schedu
   const params = await searchParams;
   const view = params.view === "week" ? "week" : "day";
   const today = localDateKey(new Date(), tz);
-  const requested = typeof params.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
+  const requested = typeof params.date === "string" && isDateKey(params.date) ? params.date : today;
 
   // Weeks start on Monday.
   const start =

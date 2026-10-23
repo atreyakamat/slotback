@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import type { Channel } from "@/generated/prisma/client";
 import { recordAudit } from "./audit";
 import { normalizeIndianPhone } from "./customers";
+import { enforce } from "../security/rate-limit";
 import { DomainError } from "./errors";
 import { type Actor, type Db, withTx } from "./types";
 
@@ -68,12 +69,6 @@ export type SelfJoinInput = {
 /** Per connection, per business. Clients at the counter often share the shop's Wi-Fi, so this stays roomy. */
 export const JOIN_LIMIT_PER_HOUR = 20;
 
-async function hitRateLimit(db: Db, key: string, limit: number, now: Date) {
-  const recent = await db.rateLimitHit.count({ where: { key, createdAt: { gte: new Date(now.getTime() - 3600_000) } } });
-  if (recent >= limit) throw new DomainError("rate_limited", "Too many sign-ups from this connection. Please ask at the front desk.");
-  await db.rateLimitHit.create({ data: { key, createdAt: now } });
-}
-
 /**
  * A client adds themselves to a business's waitlist from the public join page.
  * Consent is recorded only for the channels they ticked. Joining twice with the same number
@@ -94,7 +89,15 @@ export async function selfJoin(db: Db, code: string, input: SelfJoinInput, ctx: 
   if (input.serviceId && !location.services.some((s) => s.id === input.serviceId)) {
     throw new DomainError("invalid", "Choose a service from the list.");
   }
-  if (ctx.ipHash) await hitRateLimit(db, `join:${location.id}:${ctx.ipHash}`, JOIN_LIMIT_PER_HOUR, now);
+  if (ctx.ipHash) {
+    await enforce(
+      db,
+      `join:${location.id}:${ctx.ipHash}`,
+      { limit: JOIN_LIMIT_PER_HOUR, windowMs: 3600_000 },
+      "Too many sign-ups from this connection. Please ask at the front desk.",
+      now,
+    );
+  }
 
   return withTx(db, async (tx) => {
     let customer = await tx.customer.findFirst({ where: { locationId: location.id, phone, deletedAt: null }, select: { id: true } });
