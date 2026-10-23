@@ -13,6 +13,10 @@ export type ReelProps = {
   // "placeholder" uses the original synth beat, "none" leaves room for
   // a track added in Instagram, or pass a file in public/ to beat-sync to.
   music: "placeholder" | "none" | string;
+  // Seconds into the song where the reel starts, and frames to hold the
+  // song back, so a chosen drop lands on the logo slam.
+  musicStart?: number;
+  musicDelay?: number;
   captions: boolean;
 };
 
@@ -65,7 +69,7 @@ const sfxCues: Cue[] = [
   [s.cta + 20, "pop", 0.8],
 ];
 
-export const SlotBackReel: React.FC<ReelProps> = ({ music, captions }) => {
+export const SlotBackReel: React.FC<ReelProps> = ({ music, musicStart = 0, musicDelay = 0, captions }) => {
   const musicSrc =
     music === "none" ? null : staticFile(music === "placeholder" ? "audio/music-placeholder.wav" : music);
   return (
@@ -85,7 +89,11 @@ export const SlotBackReel: React.FC<ReelProps> = ({ music, captions }) => {
       {captions && <Captions />}
       <Grain />
 
-      {musicSrc && <Audio src={musicSrc} volume={0.45} />}
+      {musicSrc && (
+        <Sequence from={musicDelay} layout="none" name="music">
+          <Audio src={musicSrc} trimBefore={Math.round(musicStart * 30)} volume={0.45} />
+        </Sequence>
+      )}
       {(Object.keys(scenes) as SceneId[]).map((id) => (
         <Sequence key={`vo-${id}`} from={s[id] + VO_DELAY} layout="none" name={`vo ${id}`}>
           <Audio src={staticFile(`audio/vo/${id}.wav`)} volume={1} />

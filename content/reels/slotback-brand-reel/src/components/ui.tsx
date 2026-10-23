@@ -113,11 +113,15 @@ export const TapRipple: React.FC<{ at: number; x: number; y: number }> = ({ at, 
 export const Logo: React.FC<{ size?: number; tagline?: boolean }> = ({ size = 150, tagline }) => (
   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: size * 0.25 }}>
     <div style={{ display: "flex", alignItems: "center", gap: size * 0.18 }}>
-      <svg width={size * 0.82} height={size * 0.82} viewBox="0 0 100 100">
-        <rect x="4" y="4" width="92" height="92" rx="26" fill={colors.lime} />
-        <rect x="24" y="30" width="52" height="46" rx="8" fill="none" stroke={colors.green} strokeWidth="8" />
-        <line x1="24" y1="44" x2="76" y2="44" stroke={colors.green} strokeWidth="8" />
-        <path d="M38 60 l8 8 l16 -16" fill="none" stroke={colors.green} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Logo concept B (content/brand/slotback-logo.svg): calendar inside a return arrow. */}
+      <svg width={size * 0.95} height={size * 0.95} viewBox="120 120 840 840">
+        <path d="M668.3 187.6 A375 375 0 1 1 232.8 324.9" fill="none" stroke={colors.lime} strokeWidth="62" strokeLinecap="round" />
+        <path d="M277.3 261.4 L174.4 284.0 L291.2 365.8 Z" fill={colors.lime} stroke={colors.lime} strokeWidth="16" strokeLinejoin="round" />
+        <rect x="375" y="415" width="330" height="290" rx="52.8" fill="none" stroke={colors.cream} strokeWidth="48" />
+        <line x1="375" y1="502" x2="705" y2="502" stroke={colors.cream} strokeWidth="48" />
+        <line x1="474" y1="362.2" x2="474" y2="443.8" stroke={colors.cream} strokeWidth="48" strokeLinecap="round" />
+        <line x1="606" y1="362.2" x2="606" y2="443.8" stroke={colors.cream} strokeWidth="48" strokeLinecap="round" />
+        <path d="M470.7 600.6 L520.2 644.1 L615.9 560" fill="none" stroke={colors.lime} strokeWidth="48" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <div style={{ fontFamily: fonts.display, fontSize: size * 0.72, letterSpacing: "-0.03em", lineHeight: 1 }}>
         <span style={{ color: colors.cream }}>Slot</span>
