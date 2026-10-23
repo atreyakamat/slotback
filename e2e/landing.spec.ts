@@ -32,3 +32,10 @@ test("the estimate updates when a business type is picked", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Skin clinic" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText("₹22,733")).toBeVisible();
 });
+
+test("health endpoints report the site and the scheduled jobs", async ({ request }) => {
+  expect((await request.get("/api/health")).ok()).toBe(true);
+  const jobs = await request.get("/api/health/jobs");
+  expect([200, 503]).toContain(jobs.status());
+  expect(await jobs.json()).toHaveProperty("overdueMessages");
+});

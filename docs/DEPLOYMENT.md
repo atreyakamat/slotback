@@ -78,6 +78,13 @@ Businesses sign up and sign in with a link emailed through Supabase Auth. SlotBa
 
 Every pull request gets a preview URL. Previews build against the same environment variables but **never run migrations**. A PR that changes the schema must be merged (or its migration applied deliberately) before its preview works against the shared database.
 
+## Monitoring (free)
+
+- **Errors:** every server error is logged as one JSON line with `"event":"request_error"` (path, route, error message; no request data). Netlify → **Logs → Functions**, search `request_error`. Claim failures log `claim_failed`.
+- **Uptime:** point a free uptime monitor (for example UptimeRobot or Better Stack free plans, signed up by the owner) at two URLs, checked every 5 minutes:
+  - `/api/health`: the site and database are up.
+  - `/api/health/jobs`: returns 503 when queued messages are more than 5 minutes late, which means the every-minute job has stopped and offers aren't going out. Also reports failed messages in the last hour.
+
 ## Rolling back
 
 Use **Deploys → (previous deploy) → Publish deploy** in Netlify. Migrations are additive by convention; a destructive migration requires a written rollback plan in its PR.

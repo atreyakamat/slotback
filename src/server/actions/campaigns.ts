@@ -102,7 +102,7 @@ export async function claimAction(_prev: ActionState, form: FormData): Promise<A
     result = await claimOffer(db, token);
   } catch (err) {
     if (err instanceof DomainError) return { ok: false, message: err.message };
-    console.error("claim failed", err);
+    console.error(JSON.stringify({ level: "error", event: "claim_failed", message: err instanceof Error ? err.message : String(err) }));
     return { ok: false, message: "Something went wrong. Please try again, or call the business." };
   }
   if (result === "claimed") deliverSoon();
