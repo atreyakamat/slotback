@@ -1,5 +1,6 @@
-import { ExternalLink, FlaskConical } from "lucide-react";
+import { ExternalLink, FlaskConical, QrCode } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClaimQr } from "./claim-qr";
 import { CHANNEL_LABEL } from "./labels";
 import type { Channel, MessageStatus } from "@/generated/prisma/enums";
 
@@ -30,15 +31,23 @@ export function DemoInbox({ messages }: { messages: Message[] }) {
                 </span>
               </div>
               {link ? (
-                <a
-                  href={new URL(link).pathname}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
-                  aria-label={`Open claim link as ${m.offer?.customer.name}`}
-                >
-                  Open claim link <ExternalLink className="size-3.5" aria-hidden />
-                </a>
+                <>
+                  <a
+                    href={new URL(link).pathname}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
+                    aria-label={`Open claim link as ${m.offer?.customer.name}`}
+                  >
+                    Open claim link <ExternalLink className="size-3.5" aria-hidden />
+                  </a>
+                  <details className="group mt-1">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs text-muted hover:text-foreground">
+                      <QrCode className="size-3.5" aria-hidden /> Open on a phone
+                    </summary>
+                    <ClaimQr url={link} name={m.offer?.customer.name ?? "the customer"} />
+                  </details>
+                </>
               ) : null}
             </div>
           );

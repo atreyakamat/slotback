@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, LayoutDashboard, ListChecks, RefreshCcw, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, LayoutDashboard, ListChecks, RefreshCcw, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
   { href: "/app/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/app/campaigns", label: "Recovery", icon: RefreshCcw },
   { href: "/app/waitlist", label: "Waitlist", icon: ListChecks },
+  { href: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarCheck2, CalendarX2, Clock, MapPin, Phone, TimerOff } from "lucide-react";
 import { Skeleton } from "@/components/app/skeleton";
@@ -28,6 +29,8 @@ export default function ClaimPage({ params }: PageProps<"/c/[token]">) {
 
 async function Claim({ params }: { params: PageProps<"/c/[token]">["params"] }) {
   const { token } = await params;
+  // Offer state depends on the current time, so this always renders per request.
+  await connection();
   const view = await viewOffer(db, token);
 
   if (view.state === "invalid") {

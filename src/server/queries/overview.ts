@@ -11,7 +11,7 @@ export async function getTodayOverview(member: Member, now = new Date()) {
   const dayEnd = zonedToUtc(addDays(today, 1), 0, timezone);
   const fortnightAgo = new Date(now.getTime() - 14 * 24 * 3600_000);
 
-  const [appointments, resources, activeWaitlist, recentCancellations] = await Promise.all([
+  const [appointments, resources, activeWaitlist, recentCancellations, liveCampaigns] = await Promise.all([
     db.appointment.findMany({
       where: { locationId, startAt: { gte: dayStart, lt: dayEnd } },
       orderBy: { startAt: "asc" },
@@ -33,6 +33,7 @@ export async function getTodayOverview(member: Member, now = new Date()) {
     }),
     db.waitlistEntry.count({ where: { locationId, status: "ACTIVE" } }),
     db.appointment.count({ where: { locationId, status: "CANCELLED", cancelledAt: { gte: fortnightAgo } } }),
+    db.recoveryCampaign.count({ where: { locationId, status: "ACTIVE" } }),
   ]);
 
   const live = appointments.filter((a) => a.status !== "CANCELLED");
@@ -47,6 +48,7 @@ export async function getTodayOverview(member: Member, now = new Date()) {
       bookedValuePaise: live.reduce((sum, a) => sum + a.valuePaise, 0),
       activeWaitlist,
       recentCancellations,
+      liveCampaigns,
     },
   };
 }
