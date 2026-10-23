@@ -1,76 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  BarChart3,
-  BellOff,
-  CalendarX2,
-  Lock,
-  MessageCircle,
-  ShieldCheck,
-  Smartphone,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { Bento } from "@/components/marketing/bento";
 import { BookDemoForm } from "@/components/marketing/book-demo-form";
-import { HeroDemo } from "@/components/marketing/hero-demo";
+import { ClosingCta } from "@/components/marketing/closing-cta";
+import { DevicePreview } from "@/components/marketing/device-preview";
+import { KineticHeadline } from "@/components/marketing/kinetic-headline";
+import { Marquee } from "@/components/marketing/marquee";
+import { PinnedStory } from "@/components/marketing/pinned-story";
+import { RoiCalculator } from "@/components/marketing/roi-calculator";
+import { ScrollRevealText } from "@/components/marketing/scroll-reveal-text";
+import { SlotBoard } from "@/components/marketing/slot-board";
+import { SmoothScroll } from "@/components/marketing/smooth-scroll";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
-
-const STEPS = [
-  {
-    icon: CalendarX2,
-    title: "A client cancels",
-    body: "Staff mark the appointment cancelled and tap “Cancel and refill”. That's the only manual step.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Your waitlist hears first",
-    body: "Opted-in clients who fit the service, staff member and time get a secure claim link on WhatsApp or SMS.",
-  },
-  {
-    icon: TrendingUp,
-    title: "One taps, you're full again",
-    body: "The first to confirm gets the slot. It lands on your schedule and in your recovered revenue.",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: Zap,
-    title: "First to confirm, guaranteed",
-    body: "Even if several clients tap at the same second, exactly one gets the slot. No double bookings, no awkward calls.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Only people who said yes",
-    body: "Offers go only to clients who opted in, on the channel they agreed to. Opt-outs are honoured instantly.",
-  },
-  {
-    icon: BellOff,
-    title: "Quiet hours built in",
-    body: "No messages late at night. Offers wait until morning, and stop well before the appointment starts.",
-  },
-  {
-    icon: Smartphone,
-    title: "No app for your clients",
-    body: "Clients claim from a simple page that opens from the message. Nothing to download, no account to create.",
-  },
-  {
-    icon: BarChart3,
-    title: "Honest numbers",
-    body: "See recovered revenue, fill rate and time to refill. Estimated value is kept separate from visits that actually happened.",
-  },
-  {
-    icon: Lock,
-    title: "Private by design",
-    body: "Claim links are single-use and expire. Your client list stays yours, and every action is logged.",
-  },
-];
 
 const FAQ = [
   {
@@ -90,35 +37,53 @@ const FAQ = [
     a: "A refilled opening counts at the value you set for that service, shown as an estimate. Once the visit is marked completed, it moves into completed revenue. We never count a message sent as money earned.",
   },
   {
+    q: "Is there an app?",
+    a: "Your team can use SlotBack in any browser today. A staff app for iPhone and Android, with the same settings and numbers, is in development. Your clients never need an app.",
+  },
+  {
     q: "What does it cost?",
     a: "We're running short, assisted pilots with pricing agreed up front. Messaging costs are shown separately, never hidden inside a vague fee.",
   },
 ];
 
+function SectionIntro({ kicker, title, body }: { kicker: string; title: string; body?: string }) {
+  return (
+    <div className="max-w-2xl">
+      <p className="text-sm font-medium text-accent">{kicker}</p>
+      <h2 className="mt-3 font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl">{title}</h2>
+      {body ? <p className="mt-4 text-lg text-muted text-pretty">{body}</p> : null}
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <SmoothScroll />
+      <header className="sticky top-0 z-30 bg-brand-green/90 text-brand-cream backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" aria-label="SlotBack home">
             <Logo />
           </Link>
-          <nav aria-label="Site" className="hidden items-center gap-6 text-sm text-muted md:flex">
-            <a href="#how" className="hover:text-foreground">
+          <nav aria-label="Site" className="hidden items-center gap-7 text-sm text-brand-cream/70 md:flex">
+            <a href="#how" className="hover:text-brand-cream">
               How it works
             </a>
-            <a href="#features" className="hover:text-foreground">
+            <a href="#roi" className="hover:text-brand-cream">
+              What you get back
+            </a>
+            <a href="#features" className="hover:text-brand-cream">
               Features
             </a>
-            <a href="#faq" className="hover:text-foreground">
+            <a href="#faq" className="hover:text-brand-cream">
               FAQ
             </a>
           </nav>
           <div className="flex items-center gap-2">
-            <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+            <Link href="/login" className="hidden h-8 items-center rounded-lg px-3 text-sm font-medium text-brand-cream/80 hover:text-brand-cream sm:inline-flex">
               Sign in
             </Link>
-            <a href="#demo" className={buttonVariants({ size: "sm" })}>
+            <a href="#demo" className={buttonVariants({ variant: "brand", size: "sm" })}>
               Book a demo
             </a>
           </div>
@@ -126,18 +91,21 @@ export default function Home() {
       </header>
 
       <main className="overflow-x-clip">
-        <section className="bg-brand-green text-brand-cream">
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-14 pb-20 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24">
+        <section className="relative bg-brand-green text-brand-cream">
+          <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-24 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-32">
             <div>
-              <p className="text-sm font-medium text-brand-lime">Cancellation recovery for salons, spas and clinics</p>
-              <h1 className="mt-4 max-w-2xl font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-                Make every opening count.
-              </h1>
-              <p className="mt-5 max-w-xl text-lg text-brand-cream/80 text-pretty">
-                When a client cancels, SlotBack offers that slot to the right person on your waitlist over WhatsApp or SMS.
+              <p className="inline-flex items-center gap-2 rounded-full border border-brand-cream/15 px-3 py-1 text-xs font-medium text-brand-lime">
+                <span className="size-1.5 rounded-full bg-brand-lime" aria-hidden /> Now onboarding salons and clinics in Goa
+              </p>
+              <KineticHeadline
+                text="Make every opening count."
+                className="mt-6 font-display text-5xl leading-[0.98] tracking-tight sm:text-7xl lg:text-[5.5rem]"
+              />
+              <p className="mt-6 max-w-xl text-lg text-brand-cream/80 text-pretty">
+                When a client cancels, SlotBack offers the slot to the right person on your waitlist over WhatsApp or SMS.
                 The first to confirm gets it, and you see exactly what you got back.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-9 flex flex-wrap gap-3">
                 <a href="#demo" className={buttonVariants({ variant: "brand", size: "lg" })}>
                   Book a demo <ArrowRight />
                 </a>
@@ -151,127 +119,114 @@ export default function Home() {
                   Try the live demo
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-brand-muted">
-                No setup needed for the demo. It’s a sample Goa salon you can click through.
-              </p>
+              <p className="mt-4 text-sm text-brand-muted">No sign-up. It’s a sample Goa salon you can click through.</p>
             </div>
-            <HeroDemo />
+            <SlotBoard />
           </div>
         </section>
 
-        <section className="border-y bg-surface">
-          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
-            <div className="md:col-span-1">
-              <h2 className="font-display text-2xl tracking-tight text-balance">A cancelled slot is revenue you already earned.</h2>
+        <Marquee />
+
+        <section className="mx-auto max-w-6xl px-4 py-28 sm:px-6 sm:py-40">
+          <ScrollRevealText text="A cancelled slot is revenue you already earned. Today it sits empty while your front desk works the phones. SlotBack gets it back in minutes." />
+        </section>
+
+        <section id="how" className="scroll-mt-16">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <SectionIntro kicker="How it works" title="Two taps for your staff. One tap for your client." />
+          </div>
+          <div className="mt-12 md:mt-0">
+            <PinnedStory />
+          </div>
+        </section>
+
+        <section id="roi" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-28 sm:px-6">
+          <SectionIntro
+            kicker="What you get back"
+            title="Put your own numbers in."
+            body="Move the sliders to match a normal week. We'd rather show you a careful estimate than a big promise."
+          />
+          <div className="mt-12">
+            <RoiCalculator />
+          </div>
+        </section>
+
+        <section id="features" className="scroll-mt-16 border-y bg-surface-raised/40">
+          <div className="mx-auto max-w-6xl px-4 py-28 sm:px-6">
+            <SectionIntro kicker="Features" title="Built for a busy front desk." body="Calm, simple, and careful with your clients’ trust." />
+            <div className="mt-12">
+              <Bento />
             </div>
-            <ul className="grid gap-6 text-sm text-muted sm:grid-cols-3 md:col-span-2">
-              <li>
-                <p className="font-medium text-foreground">The chair sits empty</p>
-                <p className="mt-1">A cancellation a few hours out usually stays unfilled, even with clients who’d happily come in.</p>
-              </li>
-              <li>
-                <p className="font-medium text-foreground">Staff work the phones</p>
-                <p className="mt-1">The front desk calls and messages one client at a time, between appointments.</p>
-              </li>
-              <li>
-                <p className="font-medium text-foreground">Nobody knows the cost</p>
-                <p className="mt-1">Without numbers, it’s hard to tell how much cancellations take from the month.</p>
-              </li>
-            </ul>
           </div>
         </section>
 
-        <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
-          <h2 className="font-display text-3xl tracking-tight">How it works</h2>
-          <p className="mt-2 max-w-xl text-muted">Two taps for your staff. One tap for your client.</p>
-          <ol className="mt-10 grid gap-4 md:grid-cols-3">
-            {STEPS.map(({ icon: Icon, title, body }, i) => (
-              <li key={title} className="rounded-[var(--radius-card)] border bg-surface p-6">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-surface-raised text-foreground">
-                    <Icon className="size-4" aria-hidden />
-                  </span>
-                  Step {i + 1}
-                </div>
-                <h3 className="mt-4 font-semibold">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section id="features" className="scroll-mt-20 border-y bg-surface">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-            <h2 className="font-display text-3xl tracking-tight">Built for a busy front desk</h2>
-            <p className="mt-2 max-w-xl text-muted">Calm, simple and careful with your clients’ trust.</p>
-            <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <li key={title}>
-                  <Icon className="size-5 text-accent" aria-hidden />
-                  <h3 className="mt-3 font-semibold">{title}</h3>
-                  <p className="mt-1.5 text-sm text-muted">{body}</p>
-                </li>
-              ))}
-            </ul>
+        <section className="mx-auto max-w-6xl px-4 py-28 sm:px-6">
+          <SectionIntro
+            kicker="Web and app"
+            title="One setup. Every screen."
+            body="Set your rules once and they apply everywhere: the web console today, and the staff app for iPhone and Android that's in development."
+          />
+          <div className="mt-16 pb-6">
+            <DevicePreview />
           </div>
         </section>
 
-        <section id="demo" className="mx-auto grid max-w-6xl scroll-mt-20 gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
-          <div>
-            <p className="text-sm font-medium text-accent">Now onboarding in Goa</p>
-            <h2 className="mt-2 font-display text-3xl tracking-tight text-balance">See it refill a real cancellation</h2>
-            <p className="mt-3 text-muted text-pretty">
-              We’re working with a small group of salons and clinics. In a 20-minute walkthrough we’ll show the full loop on
-              your own services, and if it fits, set you up the same week.
-            </p>
-            <ul className="mt-6 grid gap-2 text-sm">
-              <li className="flex gap-2">
-                <span className="text-success">✓</span> Setup done with you, in an afternoon
-              </li>
-              <li className="flex gap-2">
-                <span className="text-success">✓</span> Short pilot with a clear end date
-              </li>
-              <li className="flex gap-2">
-                <span className="text-success">✓</span> Your client list stays yours
-              </li>
-            </ul>
-          </div>
-          <div className="relative rounded-[var(--radius-card)] border bg-surface p-5 sm:p-7">
-            <BookDemoForm />
+        <section id="demo" className="scroll-mt-16 border-t bg-surface">
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-28 sm:px-6 lg:grid-cols-[1fr_1.2fr]">
+            <div>
+              <SectionIntro
+                kicker="Book a demo"
+                title="See it refill a real cancellation."
+                body="In 20 minutes we'll run the full loop on your own services. If it fits, we'll set you up the same week."
+              />
+              <ul className="mt-8 grid gap-3 text-sm">
+                {["Setup done with you, in an afternoon", "Short pilot with a clear end date", "Your client list stays yours"].map((t) => (
+                  <li key={t} className="flex items-center gap-3">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-highlight text-[11px] font-bold text-highlight-foreground">✓</span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="relative rounded-[2rem] border bg-background p-5 sm:p-8">
+              <BookDemoForm />
+            </div>
           </div>
         </section>
 
-        <section id="faq" className="scroll-mt-20 border-t bg-surface">
-          <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6">
-            <h2 className="font-display text-3xl tracking-tight">Questions</h2>
-            <div className="mt-8 divide-y border-y">
+        <section id="faq" className="scroll-mt-16 border-t">
+          <div className="mx-auto max-w-3xl px-4 py-28 sm:px-6">
+            <h2 className="font-display text-4xl tracking-tight sm:text-5xl">Questions</h2>
+            <div className="mt-10 divide-y border-y">
               {FAQ.map(({ q, a }) => (
-                <details key={q} className="group py-4">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
+                <details key={q} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium">
                     {q}
-                    <span className="text-muted transition-transform group-open:rotate-45" aria-hidden>
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full border text-muted transition-transform duration-300 group-open:rotate-45" aria-hidden>
                       +
                     </span>
                   </summary>
-                  <p className="mt-2 text-sm text-muted">{a}</p>
+                  <p className="mt-3 max-w-2xl text-muted">{a}</p>
                 </details>
               ))}
             </div>
           </div>
         </section>
+
+        <ClosingCta />
       </main>
 
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted sm:px-6">
+      <footer className="bg-brand-ink text-brand-cream/70">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm sm:px-6">
           <div className="flex items-center gap-3">
-            <Logo className="text-foreground" />
+            <Logo className="text-brand-cream" />
             <span>Made in Goa</span>
           </div>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="hover:text-foreground">
+            <Link href="/privacy" className="hover:text-brand-cream">
               Privacy
             </Link>
-            <Link href="/login" className="hover:text-foreground">
+            <Link href="/login" className="hover:text-brand-cream">
               Sign in
             </Link>
             <ThemeToggle />

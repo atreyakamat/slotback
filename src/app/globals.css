@@ -14,6 +14,7 @@
   --brand-lime: #c6f432;
   --brand-cream: #f5efe1;
   --brand-muted: #8fa89b;
+  --brand-coral: #ff8f85; /* cancellations on brand-green surfaces */
 }
 
 /*
@@ -72,6 +73,7 @@
   --color-brand-lime: var(--brand-lime);
   --color-brand-cream: var(--brand-cream);
   --color-brand-muted: var(--brand-muted);
+  --color-brand-coral: var(--brand-coral);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -112,5 +114,14 @@
     html.theme-transition * {
       transition: none !important;
     }
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
