@@ -82,6 +82,16 @@ const cuesFor = (p: PlacedShot): Cue[] => {
       if (shot.state === "broken") out.push([at(seg(beats, 1, 3)), "glitch", 0.7]);
       if (shot.state === "refilled") out.push([at(seg(beats, 1, 3)), "success", 0.8]);
       break;
+    case "rating":
+      out.push([at(seg(beats, 1, 2)), shot.score >= 8 ? "success" : "error", 0.8]);
+      break;
+    case "split":
+      out.push([at(0), "whoosh", 0.6], [at(3), "whoosh", 0.6]);
+      shot.right.lines.forEach((_, k) => out.push([at(seg(beats, k + 1, Math.max(shot.left.lines.length, shot.right.lines.length) + 1)), "pop", 0.5]));
+      break;
+    case "flag":
+      out.push([at(2), shot.color === "red" ? "error" : "success", 0.7]);
+      break;
     case "pins":
       [0, 1, 2, 3, 4].forEach((i) => out.push([at(seg(beats, i, 5)), "pop", 0.6]));
       break;
@@ -94,6 +104,16 @@ const BeatBump: React.FC<{ beats: number[]; children: React.ReactNode }> = ({ be
   const last = beats.filter((b) => b <= frame).pop();
   const scale = last === undefined ? 1 : 1 + 0.025 * Math.exp(-(frame - last) / 4);
   return <AbsoluteFill style={{ scale: String(scale) }}>{children}</AbsoluteFill>;
+};
+
+// Thin top bar that fills over the reel, a small nudge to watch to the end.
+const ProgressBar: React.FC<{ total: number }> = ({ total }) => {
+  const frame = useCurrentFrame();
+  return (
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, height: 10, width: `${(frame / total) * 100}%`, background: colors.lime, boxShadow: "0 0 18px rgba(198,244,50,0.7)" }} />
+    </AbsoluteFill>
+  );
 };
 
 const ShotView: React.FC<{ placed: PlacedShot }> = ({ placed }) => {
@@ -109,6 +129,7 @@ export const SeriesReelVideo: React.FC<SeriesReelProps> = ({ reelId, withSong })
     ...t.shots.flatMap(cuesFor),
     ...t.shots.slice(1).map((p): Cue => [Math.max(0, p.from - 5), "whoosh", 0.55]),
     [t.dropFrame, "impact", 0.9],
+    ...t.laterDropFrames.map((f): Cue => [f, "impact", 0.7]),
     [t.endCardFrom, "whoosh", 0.5],
     [t.endCardFrom + 6, "pop", 0.8],
   ];
@@ -129,6 +150,10 @@ export const SeriesReelVideo: React.FC<SeriesReelProps> = ({ reelId, withSong })
         </Sequence>
       </BeatBump>
       <Flash at={t.dropFrame} length={8} />
+      {t.laterDropFrames.map((f) => (
+        <Flash key={f} at={f} length={6} />
+      ))}
+      {reel.progressBar && <ProgressBar total={t.total} />}
       {reel.vo && <SeriesCaptions lines={reel.vo} />}
       <Grain />
 

@@ -4,13 +4,14 @@
 
 export type TrackId = "windows" | "paixao" | "cavuca" | "struct";
 
-type Base = { beats: number };
+// `beats: "drop"` runs the shot up to the reel's next listed later drop.
+type Base = { beats: number | "drop" };
 
 export type Shot = Base &
   (
     | { type: "slam"; lines: string[]; kicker?: string; bg?: Bg; size?: number; stamp?: string; tag?: string }
     | { type: "notif"; headline: string; sender: string; message: string; time?: string }
-    | { type: "counter"; label?: string; steps: { value: number; note: string }[]; suffix?: string; final?: string; tag?: string }
+    | { type: "counter"; label?: string; steps: { value: number; note: string }[]; suffix?: string; final?: string; tag?: string; prefix?: string }
     | { type: "calls"; headline: string; names: string[] }
     | { type: "openSlot"; headline: string; sub?: string }
     | { type: "claim"; headline: string; slot: string; claimAt?: number }
@@ -22,6 +23,9 @@ export type Shot = Base &
     | { type: "chair"; headline: string; stamp?: string; filled?: boolean; dim?: boolean }
     | { type: "gap"; headline: string; state: "booked" | "broken" | "refilled" }
     | { type: "pins"; headline: string }
+    | { type: "rating"; headline?: string; text: string; score: number; note?: string }
+    | { type: "split"; left: { title: string; lines: string[] }; right: { title: string; lines: string[] } }
+    | { type: "flag"; color: "red" | "green"; text: string; count?: string }
   );
 
 export type Bg = "ink" | "green" | "cream" | "lime";
@@ -39,4 +43,9 @@ export type SeriesReel = {
   shots: Shot[];
   vo?: VoLine[];
   endCardFrames?: number;
+  // Song times of later drops; each gets a flash and impact, and shots
+  // with beats: "drop" end on the next one.
+  laterDrops?: number[];
+  series?: "01" | "02";
+  progressBar?: boolean;
 };

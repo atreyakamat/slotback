@@ -20,6 +20,7 @@ export type PlacedShot = {
 export type Timeline = {
   shots: PlacedShot[];
   dropFrame: number;
+  laterDropFrames: number[];
   beatFrames: number[];
   endCardFrom: number;
   total: number;
@@ -43,21 +44,33 @@ export const buildTimeline = (reel: SeriesReel): Timeline => {
   const shots: PlacedShot[] = [
     { shot: reel.hook, from: 0, duration: dropFrame, beats: hookBeats.length ? hookBeats : [0], index: 0 },
   ];
+  // Grid indices of the later drops, in order.
+  const dropMarks = (reel.laterDrops ?? []).map((d) => {
+    const target = Math.round((d - reel.songStart) * FPS);
+    let best = 0;
+    grid.forEach((f, i) => {
+      if (Math.abs(f - target) < Math.abs(grid[best] - target)) best = i;
+    });
+    return best;
+  });
   let g = 0;
   reel.shots.forEach((shot, i) => {
     const start = grid[g];
-    const end = grid[g + shot.beats];
+    const len = shot.beats === "drop" ? (dropMarks.find((m) => m > g) ?? NaN) - g : shot.beats;
+    if (!(len > 0)) throw new Error(`${reel.id}: shot ${i} has no later drop to run to`);
+    const end = grid[g + len];
     if (end === undefined) throw new Error(`${reel.id}: shot ${i} runs past the song's beat map`);
     shots.push({
       shot,
       from: start,
       duration: end - start,
-      beats: grid.slice(g, g + shot.beats).map((f) => f - start),
+      beats: grid.slice(g, g + len).map((f) => f - start),
       index: i + 1,
     });
-    g += shot.beats;
+    g += len;
   });
   const endCardFrom = grid[g];
   const total = endCardFrom + (reel.endCardFrames ?? DEFAULT_END_CARD);
-  return { shots, dropFrame, beatFrames: grid.slice(0, g + 1), endCardFrom, total };
+  const laterDropFrames = dropMarks.filter((m) => m <= g).map((m) => grid[m]);
+  return { shots, dropFrame, laterDropFrames, beatFrames: grid.slice(0, g + 1), endCardFrom, total };
 };

@@ -1,10 +1,11 @@
 import { SeriesReel } from "./types";
+import { series02 } from "./reels-02";
 
 // Series 01: the approved scripts from "SlotBack reel series: 20 scripts".
 // Reel 4 is the brand film (src/SlotBackReel.tsx), so it isn't listed here.
 // `drop` is the song time of the first big hit; the hook runs up to it.
 
-export const reels: SeriesReel[] = [
+const series01: SeriesReel[] = [
   {
     id: "r01-4pm-ghost",
     number: 1,
@@ -230,3 +231,5 @@ export const reels: SeriesReel[] = [
     ],
   },
 ];
+
+export const reels: SeriesReel[] = [...series01, ...series02];

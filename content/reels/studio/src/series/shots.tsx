@@ -169,7 +169,7 @@ export const CounterShot: React.FC<ShotProps<"counter">> = ({ shot, beats }) => 
         <div style={{ position: "absolute", top: 330, fontFamily: fonts.body, fontWeight: 800, fontSize: 50, color: colors.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{shot.label}</div>
       )}
       <div style={{ fontFamily: fonts.display, fontSize: 200, color: colors.lime, letterSpacing: "-0.04em", textShadow: landed ? "0 0 80px rgba(198,244,50,0.45)" : undefined, scale: String(interpolate(frame, [finalAt, finalAt + 5, finalAt + 12], [1, 1.15, 1], clamp)) }}>
-        ₹{Math.round(value).toLocaleString("en-IN")}
+        {shot.prefix ?? "₹"}{Math.round(value).toLocaleString("en-IN")}
       </div>
       {shot.suffix && <div style={{ fontFamily: fonts.display, fontSize: 64, color: colors.cream, marginTop: -10 }}>{shot.suffix}</div>}
       <div key={i} style={{ marginTop: 30, fontFamily: fonts.display, fontSize: 80, color: colors.cream, translate: `${interpolate(frame, [start, start + 8], [500, 0], { ...clamp, easing: punch })}px 0px` }}>
@@ -517,6 +517,72 @@ export const PinsShot: React.FC<ShotProps<"pins">> = ({ shot, beats }) => {
   );
 };
 
+export const RatingShot: React.FC<ShotProps<"rating">> = ({ shot, beats }) => {
+  const frame = useCurrentFrame();
+  const scoreAt = seg(beats, 1, 2);
+  const tone = shot.score >= 8 ? colors.lime : shot.score >= 5 ? colors.cream : colors.red;
+  return (
+    <AbsoluteFill style={{ backgroundColor: shot.score >= 8 ? colors.green : colors.ink, alignItems: "center", justifyContent: "center", translate: useShake(scoreAt, 10, shot.score >= 8 ? 30 : 16) }}>
+      {shot.headline && (
+        <div style={{ position: "absolute", top: 280, fontFamily: fonts.body, fontWeight: 800, fontSize: 46, color: colors.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>{shot.headline}</div>
+      )}
+      <div style={{ width: 880, borderRadius: 44, background: colors.cream, padding: "50px 56px", fontFamily: fonts.display, fontSize: 84, lineHeight: 1.02, color: colors.green, textAlign: "center", rotate: "-2deg", scale: String(interpolate(frame, [0, 7], [1.4, 1], { ...clamp, easing: springy })) }}>
+        <Rich text={shot.text} onLight />
+      </div>
+      {frame >= scoreAt && (
+        <div style={{ marginTop: 60, fontFamily: fonts.display, fontSize: 230, lineHeight: 1, color: tone, textShadow: shot.score >= 8 ? "0 0 90px rgba(198,244,50,0.5)" : undefined, scale: String(interpolate(frame, [scoreAt, scoreAt + 6], [2.6, 1], { ...clamp, easing: punch })) }}>
+          {shot.score}/10
+        </div>
+      )}
+      {shot.note && frame >= scoreAt + 6 && (
+        <div style={{ marginTop: 10, fontFamily: fonts.body, fontWeight: 700, fontSize: 46, color: colors.muted }}>{shot.note}</div>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+export const SplitShot: React.FC<ShotProps<"split">> = ({ shot, beats }) => {
+  const frame = useCurrentFrame();
+  const n = Math.max(shot.left.lines.length, shot.right.lines.length);
+  const side = (s: { title: string; lines: string[] }, good: boolean, offset: number) => (
+    <div style={{ flex: 1, background: good ? colors.green : colors.ink, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 300, gap: 40, borderLeft: good ? `6px solid ${colors.lime}` : undefined, translate: `0px ${interpolate(frame, [offset, offset + 8], [good ? 1920 : -1920, 0], { ...clamp, easing: punch })}px` }}>
+      <div style={{ fontFamily: fonts.display, fontSize: 70, color: good ? colors.lime : colors.muted, textTransform: "uppercase" }}>{s.title}</div>
+      {s.lines.map((l, k) => {
+        const at = seg(beats, k + 1, n + 1);
+        return (
+          <div key={k} style={{ padding: "0 40px", textAlign: "center", fontFamily: fonts.display, fontSize: 56, lineHeight: 1.05, color: good ? colors.cream : "#9AA8A0", opacity: frame >= at ? 1 : 0, scale: String(interpolate(frame, [at, at + 6], [1.5, 1], { ...clamp, easing: springy })) }}>
+            <Rich text={l} />
+          </div>
+        );
+      })}
+    </div>
+  );
+  return (
+    <AbsoluteFill style={{ flexDirection: "row" }}>
+      {side(shot.left, false, 0)}
+      {side(shot.right, true, 3)}
+    </AbsoluteFill>
+  );
+};
+
+export const FlagShot: React.FC<ShotProps<"flag">> = ({ shot }) => {
+  const frame = useCurrentFrame();
+  const red = shot.color === "red";
+  const c = red ? colors.red : colors.lime;
+  return (
+    <AbsoluteFill style={{ backgroundColor: red ? "#1B0E0C" : colors.green, alignItems: "center", justifyContent: "center", gap: 60 }}>
+      <svg width="220" height="220" viewBox="0 0 100 100" style={{ rotate: `${interpolate(frame, [0, 8], [-25, 0], { ...clamp, easing: springy })}deg` }}>
+        <rect x="18" y="8" width="7" height="88" rx="3" fill={colors.cream} />
+        <path d="M25 12 C 45 4, 60 22, 86 14 L 86 52 C 60 60, 45 42, 25 50 Z" fill={c} />
+      </svg>
+      <div style={{ fontFamily: fonts.body, fontWeight: 800, fontSize: 50, letterSpacing: "0.14em", color: c }}>{red ? "RED FLAG" : "GREEN FLAG"} {shot.count ?? ""}</div>
+      <div style={{ padding: "0 90px", textAlign: "center", fontFamily: fonts.display, fontSize: 104, lineHeight: 1, color: colors.cream, scale: String(interpolate(frame, [2, 9], [1.6, 1], { ...clamp, easing: springy })), opacity: interpolate(frame, [2, 4], [0, 1], clamp) }}>
+        <Rich text={shot.text} />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export const EndCard: React.FC = () => {
   const frame = useCurrentFrame();
   return (
@@ -546,4 +612,7 @@ export const shotComponents: { [K in Shot["type"]]: React.FC<ShotProps<K>> } = {
   chair: ChairShot,
   gap: GapShot,
   pins: PinsShot,
+  rating: RatingShot,
+  split: SplitShot,
+  flag: FlagShot,
 };

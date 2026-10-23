@@ -20,19 +20,23 @@ export const RemotionRoot: React.FC = () => (
       height={HEIGHT}
       defaultProps={{ music: "placeholder", captions: true } satisfies ReelProps}
     />
-    <Folder name="Series01">
-      {reels.map((r) => (
-        <Composition
-          key={r.id}
-          id={r.id}
-          component={SeriesReelVideo}
-          durationInFrames={seriesDuration(r.id)}
-          fps={FPS}
-          width={WIDTH}
-          height={HEIGHT}
-          defaultProps={{ reelId: r.id, withSong: true } satisfies SeriesReelProps}
-        />
-      ))}
-    </Folder>
+    {(["01", "02"] as const).map((series) => (
+      <Folder key={series} name={`Series${series}`}>
+        {reels
+          .filter((r) => (r.series ?? "01") === series)
+          .map((r) => (
+            <Composition
+              key={r.id}
+              id={r.id}
+              component={SeriesReelVideo}
+              durationInFrames={seriesDuration(r.id)}
+              fps={FPS}
+              width={WIDTH}
+              height={HEIGHT}
+              defaultProps={{ reelId: r.id, withSong: true } satisfies SeriesReelProps}
+            />
+          ))}
+      </Folder>
+    ))}
   </>
 );
