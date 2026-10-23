@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { Role } from "@/generated/prisma/client";
 import { db } from "../db";
+import type { Actor } from "../domain/types";
 import { readSession } from "./session";
 
 export type Member = {
@@ -50,4 +51,19 @@ export async function requireRole(...roles: Role[]): Promise<Member> {
   const member = await requireMember();
   if (!roles.includes(member.role)) redirect("/app?error=forbidden");
   return member;
+}
+
+/** The domain-layer view of a member: tenant ids and timezone, nothing from the client. */
+export function toActor(member: Member): Actor {
+  return {
+    userId: member.user.id,
+    organizationId: member.organization.id,
+    locationId: member.location.id,
+    timezone: member.location.timezone,
+  };
+}
+
+/** Owners and admins manage the catalogue and settings; staff run the day. */
+export function canManage(member: Member) {
+  return member.role === "OWNER" || member.role === "ADMIN";
 }

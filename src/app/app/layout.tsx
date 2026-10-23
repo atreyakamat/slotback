@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { AccountCard } from "@/components/app/account-card";
-import { NavLinks } from "@/components/app/nav-links";
+import { NavLinks, NavLinksFallback } from "@/components/app/nav-links";
 import { Logo } from "@/components/logo";
 
 export default function AppLayout({ children }: LayoutProps<"/app">) {
@@ -11,7 +11,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <Link href="/app" className="px-2 pt-1">
           <Logo />
         </Link>
-        <NavLinks />
+        <Suspense fallback={<NavLinksFallback />}>
+          <NavLinks />
+        </Suspense>
         <div className="mt-auto">
           <Suspense fallback={<div className="h-[62px] rounded-lg border bg-surface" />}>
             <AccountCard />
@@ -23,7 +25,9 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <Link href="/app">
           <Logo />
         </Link>
-        <NavLinks orientation="horizontal" />
+        <Suspense fallback={<NavLinksFallback orientation="horizontal" />}>
+          <NavLinks orientation="horizontal" />
+        </Suspense>
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:py-10">{children}</main>
