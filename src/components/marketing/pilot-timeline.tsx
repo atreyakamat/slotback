@@ -21,7 +21,7 @@ export function PilotTimeline() {
   return (
     <ol className="grid gap-4 md:grid-cols-3">
       {STEPS.map((s, i) => (
-        <li key={s.when} className="reveal relative rounded-3xl border bg-surface p-6" style={{ animationRangeStart: `entry ${5 + i * 10}%` }}>
+        <li key={s.when} className="pop-in relative rounded-3xl border bg-surface p-6">
           <span className="relative flex size-11 items-center justify-center rounded-full bg-highlight font-display text-highlight-foreground">
             {i + 1}
           </span>

@@ -13,6 +13,7 @@ import { MobileCta } from "@/components/marketing/mobile-cta";
 import { PilotTimeline } from "@/components/marketing/pilot-timeline";
 import { PinnedStory } from "@/components/marketing/pinned-story";
 import { RoiCalculator } from "@/components/marketing/roi-calculator";
+import { ScrollBand } from "@/components/marketing/scroll-band";
 import { ScrollRevealText } from "@/components/marketing/scroll-reveal-text";
 import { SlotBoard } from "@/components/marketing/slot-board";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -52,7 +53,7 @@ function SectionIntro({ kicker, title, body }: { kicker: string; title: string; 
   return (
     <div className="max-w-2xl">
       <p className="text-sm font-medium text-accent">{kicker}</p>
-      <h2 className="mt-3 font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl">{title}</h2>
+      <h2 className="wipe mt-3 font-display text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl">{title}</h2>
       {body ? <p className="mt-4 text-lg text-muted text-pretty">{body}</p> : null}
     </div>
   );
@@ -62,6 +63,7 @@ export default function Home() {
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-30 bg-brand-green/90 text-brand-cream backdrop-blur-md">
+        <span className="scroll-progress absolute inset-x-0 bottom-0 hidden h-0.5 bg-brand-lime motion-reduce:hidden supports-[animation-timeline:view()]:block" aria-hidden />
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" aria-label="SlotBack home">
             <Logo />
@@ -101,7 +103,7 @@ export default function Home() {
             <div className="absolute -bottom-56 -left-40 size-[30rem] rounded-full bg-brand-green-light/60 blur-3xl" />
           </div>
           <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:pt-20 lg:pb-20">
-            <div>
+            <div className="drift-out">
               <p className="inline-flex items-center gap-2 rounded-full border border-brand-cream/15 px-3 py-1 text-xs font-medium text-brand-lime">
                 <span className="size-1.5 rounded-full bg-brand-lime" aria-hidden /> Now onboarding salons and clinics in Goa
               </p>
@@ -129,7 +131,9 @@ export default function Home() {
               </div>
               <p className="mt-4 text-sm text-brand-muted">No sign-up. It’s a sample Goa salon you can click through.</p>
             </div>
-            <SlotBoard />
+            <div className="drift-out-far">
+              <SlotBoard />
+            </div>
           </div>
           <ul className="relative mx-auto grid max-w-6xl grid-cols-3 gap-4 border-t border-brand-cream/10 px-4 py-8 sm:px-6">
             {[
@@ -190,6 +194,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <ScrollBand />
 
         <section className="mx-auto max-w-6xl px-4 py-28 sm:px-6">
           <SectionIntro

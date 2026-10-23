@@ -62,7 +62,13 @@ export function PinnedStory() {
         ))}
         <div className="sticky top-0 flex h-dvh items-center">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] items-center gap-16 px-6">
-            <ol className="grid gap-10">
+            <ol className="relative grid gap-10 pl-8">
+              <span className="absolute top-1 bottom-1 left-0 w-0.5 rounded-full bg-border" aria-hidden />
+              <span
+                className="absolute top-1 left-0 w-0.5 rounded-full bg-accent transition-[height] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{ height: `calc((100% - 0.5rem) * ${(active + 1) / STEPS.length})` }}
+                aria-hidden
+              />
               {STEPS.map((s, i) => (
                 <li key={s.kicker} className={cn("transition-opacity duration-500", i === active ? "opacity-100" : "opacity-30")}>
                   <p className="text-sm font-medium text-accent">{s.kicker}</p>

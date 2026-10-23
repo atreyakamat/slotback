@@ -9,7 +9,7 @@ const range = (r: string) => ({ "--range": r }) as CSSProperties;
 /** Final call to action: the logo draws itself as it scrolls into view, then the ask. */
 export function ClosingCta() {
   return (
-    <section className="draw-scope bg-brand-green text-brand-cream">
+    <section className="expand draw-scope bg-brand-green text-brand-cream">
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-24 text-center sm:px-6 sm:py-32">
         <svg viewBox="0 0 1080 1080" className="size-28 sm:size-36" aria-hidden>
           <path className="draw" pathLength={1} style={range("entry 30% cover 40%")} d="M668.3 187.6 A375 375 0 1 1 232.8 324.9" fill="none" stroke="var(--brand-lime)" strokeWidth="62" strokeLinecap="round" />

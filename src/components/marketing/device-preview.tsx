@@ -37,7 +37,7 @@ function Dashboard({ compact }: { compact?: boolean }) {
 export function DevicePreview() {
   return (
     <div className="relative mx-auto flex max-w-5xl items-end justify-center">
-      <div className="w-full max-w-3xl">
+      <div className="tilt-in w-full max-w-3xl">
         <div className="rounded-t-2xl border-[10px] border-b-0 border-brand-ink bg-brand-ink shadow-[0_0_0_1px_rgb(245_239_225/0.12)]">
           <div className="grid grid-cols-[120px_1fr] overflow-hidden rounded-t-lg bg-brand-cream text-brand-ink">
             <div className="hidden border-r border-brand-ink/10 p-3 text-[11px] sm:block">
@@ -56,7 +56,7 @@ export function DevicePreview() {
         </div>
         <div className="mx-auto h-4 w-[110%] -translate-x-[4.5%] rounded-b-xl bg-brand-ink/90 shadow-[0_0_0_1px_rgb(245_239_225/0.12)]" aria-hidden />
       </div>
-      <div className="absolute -right-2 -bottom-6 hidden w-[200px] md:block lg:-right-10">
+      <div className="rise-in absolute -right-2 -bottom-6 hidden w-[200px] md:block lg:-right-10">
         <Phone className="w-[200px] border-[8px]">
           <div className="p-3 pt-8">
             <p className="mb-2 font-display text-base">Today</p>

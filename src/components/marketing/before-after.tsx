@@ -18,7 +18,7 @@ const WITH = [
 function Column({ tone, title, rows, outcome, detail }: { tone: "before" | "after"; title: string; rows: readonly (readonly [string, string])[]; outcome: string; detail: string }) {
   const after = tone === "after";
   return (
-    <div className={cn("reveal flex flex-col rounded-[2rem] p-6 sm:p-8", after ? "bg-brand-green text-brand-cream" : "border bg-surface")}>
+    <div className={cn("flex flex-col rounded-[2rem] p-6 sm:p-8", after ? "from-right bg-brand-green text-brand-cream" : "from-left border bg-surface")}>
       <p className={cn("flex items-center gap-2 text-sm font-medium", after ? "text-brand-lime" : "text-muted")}>
         {after ? <Check className="size-4" aria-hidden /> : <PhoneOff className="size-4" aria-hidden />}
         {title}

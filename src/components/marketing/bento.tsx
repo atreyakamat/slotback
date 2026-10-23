@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 function Cell({ className, icon, title, body, children }: { className?: string; icon: ReactNode; title: string; body: string; children?: ReactNode }) {
   return (
-    <li className={cn("reveal spotlight group flex flex-col overflow-hidden rounded-3xl border bg-surface p-6 transition-colors hover:border-accent/40", className)}>
+    <li className={cn("pop-in spotlight group flex flex-col overflow-hidden rounded-3xl border bg-surface p-6 transition-colors hover:border-accent/40", className)}>
       <span className="flex size-9 items-center justify-center rounded-xl bg-surface-raised text-accent">{icon}</span>
       <h3 className="mt-4 text-lg font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-muted">{body}</p>

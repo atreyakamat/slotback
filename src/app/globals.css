@@ -236,6 +236,154 @@
   }
 }
 
+/* More scroll-linked effects. Each uses a scroll or view timeline; unsupported browsers show the end state. */
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes drift-out {
+  to {
+    opacity: 0.25;
+    transform: translateY(-48px) scale(0.97);
+  }
+}
+@keyframes drift-out-far {
+  to {
+    transform: translateY(-140px) rotate(-2deg);
+  }
+}
+@keyframes wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-24px);
+  }
+}
+@keyframes from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-80px) rotate(-2deg);
+  }
+}
+@keyframes from-right {
+  from {
+    opacity: 0;
+    transform: translateX(80px) rotate(2deg);
+  }
+}
+@keyframes tilt-in {
+  from {
+    opacity: 0.3;
+    transform: perspective(1400px) rotateX(32deg) scale(0.88);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(140px) rotate(6deg);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(48px) scale(0.94);
+  }
+}
+@keyframes band-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-35%);
+  }
+}
+@keyframes band-right {
+  from {
+    transform: translateX(-35%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes expand {
+  from {
+    clip-path: inset(0 5% round 3rem);
+  }
+  to {
+    clip-path: inset(0 0 round 0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .scroll-progress {
+    transform-origin: left;
+    animation: grow-x linear both;
+    animation-timeline: scroll(root);
+  }
+  .drift-out,
+  .drift-out-far {
+    animation: drift-out linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .drift-out-far {
+    animation-name: drift-out-far;
+  }
+  .wipe {
+    animation: wipe cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 40%;
+  }
+  .from-left,
+  .from-right {
+    animation: from-left cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+  .from-right {
+    animation-name: from-right;
+  }
+  .tilt-in {
+    transform-origin: 50% 100%;
+    animation: tilt-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 45%;
+  }
+  .rise-in {
+    animation: rise-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+  .pop-in {
+    animation: pop-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+  .pop-in:nth-child(3n + 2) {
+    animation-range: entry 10% cover 38%;
+  }
+  .pop-in:nth-child(3n) {
+    animation-range: entry 20% cover 46%;
+  }
+  .band {
+    view-timeline-name: --band;
+  }
+  .band-left,
+  .band-right {
+    animation: band-left linear both;
+    animation-timeline: --band;
+    animation-range: cover;
+  }
+  .band-right {
+    animation-name: band-right;
+  }
+  .expand {
+    animation: expand linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+}
+
 /* Cursor spotlight for cards: the parent sets --x and --y on the hovered card. */
 .spotlight {
   position: relative;
@@ -303,7 +451,19 @@
     animation: none !important;
   }
   .reveal,
-  .draw {
+  .draw,
+  .scroll-progress,
+  .drift-out,
+  .drift-out-far,
+  .wipe,
+  .from-left,
+  .from-right,
+  .tilt-in,
+  .rise-in,
+  .pop-in,
+  .band-left,
+  .band-right,
+  .expand {
     animation: none !important;
   }
 }
