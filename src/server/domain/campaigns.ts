@@ -1,7 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { addDays, localDateKey, parseHm, zonedToUtc } from "@/lib/time";
 import { providerFor } from "../messaging/registry";
-import { confirmationMessage, offerMessage } from "../messaging/templates";
+import { confirmationMessage, confirmationTemplate, offerMessage, offerTemplate } from "../messaging/templates";
 import { recordAudit } from "./audit";
 import { evaluateCandidates, inQuietHours, loadCandidates, type Evaluated, type Slot } from "./eligibility";
 import { DomainError, violatesConstraint } from "./errors";
@@ -116,7 +116,8 @@ export async function previewCampaign(db: Db, actor: Actor, campaignId: string, 
     loadCandidates(db, slotOf(campaign), campaign.id, now),
   ]);
   const rules = campaign.rulesSnapshot as unknown as RulesSnapshot;
-  const evaluated = evaluateCandidates(slotOf(campaign), rules.timezone, candidates);
+  const provider = providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider });
+  const evaluated = evaluateCandidates(slotOf(campaign), rules.timezone, candidates, provider.channels);
   const sendAt = nextSendTime(now, rules);
   const expiresAt = offerExpiry(sendAt, rules, campaign.expiresAt!);
   const sample = evaluated.find((e) => e.eligible);
@@ -169,17 +170,25 @@ export async function sendRound(db: Db, actor: Actor, campaignId: string, opts: 
       tx.resource.findUniqueOrThrow({ where: { id: campaign.resourceId } }),
       loadCandidates(tx, slotOf(campaign), campaign.id, now),
     ]);
-    const chosen = evaluateCandidates(slotOf(campaign), rules.timezone, candidates)
+    const provider = providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider });
+    const chosen = evaluateCandidates(slotOf(campaign), rules.timezone, candidates, provider.channels)
       .filter((e): e is Extract<Evaluated, { eligible: true }> => e.eligible)
       .slice(0, rules.offerBatchSize);
     if (chosen.length === 0) {
       throw new DomainError("conflict", "No matching customers are available right now. Add to the waitlist or handle this slot manually.");
     }
 
-    const provider = providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider });
     const expiresAt = offerExpiry(sendAt, rules, campaign.expiresAt);
     const priorOffers = await tx.offer.count({ where: { campaignId: campaign.id } });
 
+    const offerVars = {
+      businessName: location.organization.name,
+      serviceName: service.name,
+      staffName: resource.name,
+      startAt: campaign.startAt,
+      expiresAt,
+      timezone: rules.timezone,
+    };
     for (const [i, e] of chosen.entries()) {
       const { token, hash } = generateClaimToken();
       const offer = await tx.offer.create({
@@ -200,16 +209,8 @@ export async function sendRound(db: Db, actor: Actor, campaignId: string, opts: 
           channel: e.channel,
           provider: provider.name,
           toAddress: e.address,
-          body: offerMessage({
-            customerName: e.candidate.name,
-            businessName: location.organization.name,
-            serviceName: service.name,
-            staffName: resource.name,
-            startAt: campaign.startAt,
-            expiresAt,
-            timezone: rules.timezone,
-            link: `${opts.baseUrl}/c/${token}`,
-          }),
+          body: offerMessage({ ...offerVars, customerName: e.candidate.name, link: `${opts.baseUrl}/c/${token}` }),
+          template: e.channel === "WHATSAPP" ? offerTemplate({ ...offerVars, customerName: e.candidate.name, token }) : undefined,
           nextAttemptAt: sendAt,
           idempotencyKey: `offer:${offer.id}`,
         },
@@ -412,11 +413,21 @@ export async function claimOffer(db: Db, token: string, opts: { now?: Date } = {
         await tx.waitlistEntry.update({ where: { id: offer.waitlistEntryId }, data: { status: "FULFILLED" } });
       }
 
-      // Confirmation goes out right away on the channel the offer used (the customer just acted).
-      const provider = providerFor({ isDemo: c.location.organization.isDemo });
+      // Confirmation goes out right away, on the channel and provider that delivered the offer.
+      const sentWith = await tx.outboxMessage.findFirst({ where: { offerId: offer.id }, select: { provider: true } });
+      const provider = providerFor({ isDemo: c.location.organization.isDemo, configured: sentWith?.provider });
       const customer = await tx.customer.findUniqueOrThrow({ where: { id: offer.customerId } });
       const to = offer.channel === "EMAIL" ? customer.email : customer.phone;
       if (to) {
+        const confirmVars = {
+          customerName: customer.name,
+          businessName: c.location.organization.name,
+          serviceName: c.service.name,
+          staffName: c.resource.name,
+          startAt: c.startAt,
+          timezone: c.location.timezone,
+          address: c.location.address,
+        };
         await tx.outboxMessage.create({
           data: {
             locationId: c.locationId,
@@ -424,15 +435,8 @@ export async function claimOffer(db: Db, token: string, opts: { now?: Date } = {
             channel: offer.channel,
             provider: provider.name,
             toAddress: to,
-            body: confirmationMessage({
-              customerName: customer.name,
-              businessName: c.location.organization.name,
-              serviceName: c.service.name,
-              staffName: c.resource.name,
-              startAt: c.startAt,
-              timezone: c.location.timezone,
-              address: c.location.address,
-            }),
+            body: confirmationMessage(confirmVars),
+            template: offer.channel === "WHATSAPP" ? confirmationTemplate(confirmVars) : undefined,
             idempotencyKey: `claim-confirmation:${offer.id}`,
           },
         });

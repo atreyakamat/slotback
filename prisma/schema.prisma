@@ -376,6 +376,8 @@ model OutboxMessage {
   provider          String
   toAddress         String        @map("to_address")
   body              String
+  /// WhatsApp template name and variables. Cleared after sending, because it holds the claim token.
+  template          Json?
   status            MessageStatus @default(QUEUED)
   attempts          Int           @default(0)
   nextAttemptAt     DateTime      @default(now()) @map("next_attempt_at")

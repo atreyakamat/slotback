@@ -40,7 +40,8 @@ export type ExclusionReason =
   | "outside_time_window"
   | "busy"
   | "cancelled_this_slot"
-  | "already_offered";
+  | "already_offered"
+  | "channel_unavailable";
 
 export const EXCLUSION_LABELS: Record<ExclusionReason, string> = {
   no_consent: "No messaging consent",
@@ -51,6 +52,7 @@ export const EXCLUSION_LABELS: Record<ExclusionReason, string> = {
   busy: "Already booked at that time",
   cancelled_this_slot: "Cancelled this appointment",
   already_offered: "Already offered this opening",
+  channel_unavailable: "Only agreed to a channel that isn't set up yet",
 };
 
 export type Evaluated =
@@ -61,11 +63,16 @@ function addressFor(c: Candidate, channel: Channel): string | null {
   return channel === "EMAIL" ? c.email : c.phone;
 }
 
-/** Picks the customer's preferred channel when it is consented and reachable, otherwise the next best one. */
-export function pickChannel(c: Candidate): { channel: Channel; address: string } | null {
+const ALL_CHANNELS: readonly Channel[] = ["WHATSAPP", "SMS", "EMAIL"];
+
+/**
+ * Picks the customer's preferred channel when it is consented, reachable and one the
+ * business can send on, otherwise the next best one.
+ */
+export function pickChannel(c: Candidate, sendable: readonly Channel[] = ALL_CHANNELS): { channel: Channel; address: string } | null {
   const order: Channel[] = [c.preferredChannel, "WHATSAPP", "SMS", "EMAIL"];
   for (const channel of order) {
-    if (!c.granted.includes(channel)) continue;
+    if (!c.granted.includes(channel) || !sendable.includes(channel)) continue;
     const address = addressFor(c, channel);
     if (address) return { channel, address };
   }
@@ -79,7 +86,12 @@ export function pickChannel(c: Candidate): { channel: Channel; address: string }
  * Order: customers who asked for this exact service first, then "any service"; within
  * each group, whoever joined the waitlist earliest goes first.
  */
-export function evaluateCandidates(slot: Slot, timezone: string, candidates: Candidate[]): Evaluated[] {
+export function evaluateCandidates(
+  slot: Slot,
+  timezone: string,
+  candidates: Candidate[],
+  sendable: readonly Channel[] = ALL_CHANNELS,
+): Evaluated[] {
   const weekday = localWeekday(slot.startAt, timezone);
   const startMin = localMinuteOfDay(slot.startAt, timezone);
   const endMin = startMin + Math.round((slot.endAt.getTime() - slot.startAt.getTime()) / 60000);
@@ -95,7 +107,8 @@ export function evaluateCandidates(slot: Slot, timezone: string, candidates: Can
       return { candidate: c, eligible: false, reason: "outside_time_window" };
     if (c.busy) return { candidate: c, eligible: false, reason: "busy" };
     if (c.granted.length === 0) return { candidate: c, eligible: false, reason: "no_consent" };
-    const pick = pickChannel(c);
+    if (!c.granted.some((ch) => sendable.includes(ch))) return { candidate: c, eligible: false, reason: "channel_unavailable" };
+    const pick = pickChannel(c, sendable);
     if (!pick) return { candidate: c, eligible: false, reason: "no_contact" };
     return { candidate: c, eligible: true, ...pick, rank: 0 };
   });

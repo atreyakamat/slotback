@@ -12,8 +12,17 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
-  /** Message provider for real (non-demo) workspaces. Demo workspaces always use the simulator. */
-  MESSAGE_PROVIDER: z.string().default("demo"),
+  /**
+   * Message provider for real (non-demo) workspaces: "demo" (simulated) or "whatsapp_cloud".
+   * Demo workspaces always use the simulator.
+   */
+  MESSAGE_PROVIDER: blank(z.enum(["demo", "whatsapp_cloud"]).default("demo")),
+  /** Meta WhatsApp Cloud API. See docs/WHATSAPP_SETUP.md. Token and app secret are secrets. */
+  WHATSAPP_ACCESS_TOKEN: blank(z.string().min(20).optional()),
+  WHATSAPP_PHONE_NUMBER_ID: blank(z.string().regex(/^\d+$/, "WHATSAPP_PHONE_NUMBER_ID is a number").optional()),
+  WHATSAPP_TEMPLATE_LANGUAGE: blank(z.string().default("en")),
+  WHATSAPP_APP_SECRET: blank(z.string().min(16).optional()),
+  WHATSAPP_VERIFY_TOKEN: blank(z.string().min(16).optional()),
   /** Shared secret for the scheduled job endpoint. When unset, the endpoint refuses all calls. */
   CRON_SECRET: z.string().min(16).optional(),
   /**
@@ -29,6 +38,13 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema>;
 
+function checkProvider(e: Env) {
+  if (e.MESSAGE_PROVIDER === "whatsapp_cloud" && (!e.WHATSAPP_ACCESS_TOKEN || !e.WHATSAPP_PHONE_NUMBER_ID)) {
+    return "MESSAGE_PROVIDER is whatsapp_cloud, so WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID are required";
+  }
+  return null;
+}
+
 let cached: Env | undefined;
 
 /** Validated server environment. Throws a readable error on first use if misconfigured. */
@@ -39,6 +55,8 @@ export function env(): Env {
     const issues = parsed.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment configuration:\n${issues}\nSee .env.example.`);
   }
+  const problem = checkProvider(parsed.data);
+  if (problem) throw new Error(`Invalid environment configuration:\n  - ${problem}\nSee .env.example.`);
   cached = parsed.data;
   return cached;
 }

@@ -8,6 +8,7 @@ import type { MessageProvider, OutgoingMessage, SendResult } from "./provider";
 export const demoProvider: MessageProvider = {
   name: "demo",
   keepsBodies: true,
+  channels: ["WHATSAPP", "SMS", "EMAIL"],
   async send(message: OutgoingMessage): Promise<SendResult> {
     const id = createHash("sha256").update(message.idempotencyKey).digest("hex").slice(0, 24);
     return { providerMessageId: `demo_${id}`, delivered: true };

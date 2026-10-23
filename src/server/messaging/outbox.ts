@@ -1,7 +1,7 @@
-import type { PrismaClient } from "@/generated/prisma/client";
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { ProviderError } from "./provider";
 import { providerByName } from "./registry";
-import { redactLinks } from "./templates";
+import { redactLinks, type TemplateRef } from "./templates";
 
 const MAX_ATTEMPTS = 5;
 const LEASE_SECONDS = 120;
@@ -34,9 +34,15 @@ export async function processOutbox(db: PrismaClient, now = new Date(), limit = 
   const result: OutboxRunResult = { sent: 0, retrying: 0, failed: 0 };
   for (const { id } of leased) {
     const msg = await db.outboxMessage.findUniqueOrThrow({ where: { id } });
-    const provider = providerByName(msg.provider);
     try {
-      const sent = await provider.send({ channel: msg.channel, to: msg.toAddress, body: msg.body, idempotencyKey: msg.idempotencyKey });
+      const provider = providerByName(msg.provider);
+      const sent = await provider.send({
+        channel: msg.channel,
+        to: msg.toAddress,
+        body: msg.body,
+        template: (msg.template as TemplateRef | null) ?? null,
+        idempotencyKey: msg.idempotencyKey,
+      });
       const status = sent.delivered ? "DELIVERED" : "SENT";
       await db.$transaction([
         db.outboxMessage.update({
@@ -47,6 +53,7 @@ export async function processOutbox(db: PrismaClient, now = new Date(), limit = 
             providerMessageId: sent.providerMessageId,
             errorCode: null,
             body: provider.keepsBodies ? msg.body : redactLinks(msg.body),
+            template: provider.keepsBodies ? undefined : Prisma.DbNull,
           },
         }),
         ...(msg.offerId

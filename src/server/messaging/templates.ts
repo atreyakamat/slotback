@@ -28,10 +28,49 @@ export function confirmationMessage(i: Omit<OfferTemplateInput, "expiresAt" | "l
     `You're booked, ${first}! ${i.serviceName} with ${i.staffName} at ${i.businessName},`,
     `${formatDate(i.startAt, i.timezone)} at ${formatTime(i.startAt, i.timezone)}.`,
     i.address ? `Address: ${i.address}.` : null,
-    `Need to change it? Just reply to this message.`,
+    `To change it, please contact ${i.businessName} directly.`,
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+/**
+ * A WhatsApp template call: the approved template's name, its body variables in order, and the
+ * dynamic end of its URL button. The wording lives in Meta (see docs/WHATSAPP_SETUP.md) and must
+ * match `offerMessage` / `confirmationMessage` above.
+ */
+export type TemplateRef = { name: string; body: string[]; urlSuffix?: string };
+
+export const WHATSAPP_TEMPLATES = { offer: "slot_opening", confirmation: "slot_booked" } as const;
+
+/** WhatsApp rejects variables with line breaks, tabs or long runs of spaces. */
+const param = (v: string) => v.replace(/\s+/g, " ").trim().slice(0, 200);
+
+export function offerTemplate(i: Omit<OfferTemplateInput, "link"> & { token: string }): TemplateRef {
+  return {
+    name: WHATSAPP_TEMPLATES.offer,
+    body: [
+      i.customerName.split(" ")[0],
+      i.businessName,
+      `${i.serviceName} with ${i.staffName}`,
+      `${formatDate(i.startAt, i.timezone)} at ${formatTime(i.startAt, i.timezone)}`,
+      formatTime(i.expiresAt, i.timezone),
+    ].map(param),
+    urlSuffix: i.token,
+  };
+}
+
+export function confirmationTemplate(i: Omit<OfferTemplateInput, "expiresAt" | "link"> & { address: string | null }): TemplateRef {
+  return {
+    name: WHATSAPP_TEMPLATES.confirmation,
+    body: [
+      i.customerName.split(" ")[0],
+      `${i.serviceName} with ${i.staffName}`,
+      i.businessName,
+      `${formatDate(i.startAt, i.timezone)} at ${formatTime(i.startAt, i.timezone)}`,
+      i.address ?? "See the business for directions",
+    ].map(param),
+  };
 }
 
 /** Replaces a claim link in a sent message so the token is not kept at rest. */

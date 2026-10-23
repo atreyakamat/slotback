@@ -266,6 +266,7 @@ describe.skipIf(!hasTestDb)("cancellation recovery", () => {
     registerProvider({
       name: "flaky-test",
       keepsBodies: false,
+      channels: ["WHATSAPP", "SMS"],
       async send() {
         calls++;
         throw new ProviderError("provider_timeout", true);

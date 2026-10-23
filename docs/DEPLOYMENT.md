@@ -24,7 +24,8 @@ SlotBack uses Supabase as plain Postgres for now. No Supabase API keys are neede
 | `NEXT_PUBLIC_APP_URL` | `https://slotback.atreyakamat.dev` (no trailing slash) |
 | `DEMO_MODE` | `true` |
 | `CRON_SECRET` | Output of `openssl rand -base64 24`. Lets the every-minute job expire offers and send queued messages |
-| `MESSAGE_PROVIDER` | `demo` (simulated; nothing is sent to real phones until a provider is approved) |
+| `MESSAGE_PROVIDER` | `demo` (simulated) until WhatsApp is set up, then `whatsapp_cloud`. See [WHATSAPP_SETUP.md](WHATSAPP_SETUP.md) |
+| `WHATSAPP_*` | Only with `whatsapp_cloud`: access token, phone number ID, template language, app secret, verify token. See [WHATSAPP_SETUP.md](WHATSAPP_SETUP.md) |
 | `AUTH_EMAIL_PROVIDER` | `supabase` (emails sign-in links for real businesses). Never `dev-insecure` here |
 | `SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
 | `SUPABASE_ANON_KEY` | Supabase → Project Settings → API → publishable (anon) key. Never the service role key |

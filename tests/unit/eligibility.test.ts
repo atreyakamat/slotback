@@ -89,4 +89,12 @@ describe("quiet hours", () => {
     expect(inQuietHours(zonedToUtc("2026-10-24", 14 * 60, TZ), TZ, "13:00", "15:00")).toBe(true);
     expect(inQuietHours(zonedToUtc("2026-10-24", 15 * 60, TZ), TZ, "13:00", "15:00")).toBe(false);
   });
+
+  it("only offers on channels the business can send on", () => {
+    const smsOnly = candidate({ granted: ["SMS"], preferredChannel: "SMS" });
+    const both = candidate({ granted: ["SMS", "WHATSAPP"], preferredChannel: "SMS" });
+    const [eligible, excluded] = evaluateCandidates(slot, TZ, [smsOnly, both], ["WHATSAPP"]);
+    expect(eligible).toMatchObject({ eligible: true, channel: "WHATSAPP", candidate: { customerId: both.customerId } });
+    expect(excluded).toMatchObject({ eligible: false, reason: "channel_unavailable" });
+  });
 });
