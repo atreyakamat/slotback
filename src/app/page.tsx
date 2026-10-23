@@ -84,6 +84,9 @@ export default function Home() {
             <a href="#faq" className="hover:text-brand-cream">
               FAQ
             </a>
+            <Link href="/resources" className="hover:text-brand-cream">
+              Free toolkit
+            </Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/login" className="hidden h-8 items-center rounded-lg px-3 text-sm font-medium text-brand-cream/80 hover:text-brand-cream sm:inline-flex">
@@ -273,6 +276,9 @@ export default function Home() {
             <span>Made in Goa</span>
           </div>
           <div className="flex items-center gap-5">
+            <Link href="/resources" className="hover:text-brand-cream">
+              Free toolkit
+            </Link>
             <Link href="/privacy" className="hover:text-brand-cream">
               Privacy
             </Link>
