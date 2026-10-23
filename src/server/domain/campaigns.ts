@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { addDays, localDateKey, parseHm, zonedToUtc } from "@/lib/time";
+import { enqueueWebhooks } from "../integrations/webhooks";
 import { providerFor } from "../messaging/registry";
 import { confirmationMessage, confirmationTemplate, offerMessage, offerTemplate } from "../messaging/templates";
 import { recordAudit } from "./audit";
@@ -65,46 +66,78 @@ export async function openCampaign(db: Db, actor: Actor, appointmentId: string, 
   return withTx(db, async (tx) => {
     const appointment = await tx.appointment.findFirst({ where: { id: appointmentId, locationId: actor.locationId } });
     if (!appointment) throw new DomainError("not_found", "That appointment was not found.");
-    if (appointment.status !== "CANCELLED") throw new DomainError("invalid", "Only a cancelled appointment can be refilled.");
-    if (appointment.startAt <= now) throw new DomainError("invalid", "This opening has already started.");
-
-    const existing = await tx.recoveryCampaign.findUnique({ where: { appointmentId } });
-    if (existing) return existing;
-
-    const location = await loadLocation(tx, actor.locationId);
-    const rules: RulesSnapshot = {
-      minLeadMinutes: location.minLeadMinutes,
-      offerTtlMinutes: location.offerTtlMinutes,
-      offerBatchSize: location.offerBatchSize,
-      quietHoursStart: location.quietHoursStart,
-      quietHoursEnd: location.quietHoursEnd,
-      timezone: location.timezone,
-    };
-    const campaign = await tx.recoveryCampaign.create({
-      data: {
-        locationId: actor.locationId,
-        appointmentId,
-        serviceId: appointment.serviceId,
-        resourceId: appointment.resourceId,
-        startAt: appointment.startAt,
-        endAt: appointment.endAt,
-        valuePaise: appointment.valuePaise,
-        rulesSnapshot: rules as unknown as Prisma.InputJsonValue,
-        expiresAt: new Date(appointment.startAt.getTime() - rules.minLeadMinutes * 60_000),
-        createdById: actor.userId,
-      },
-    });
-    await recordAudit(tx, {
-      organizationId: actor.organizationId,
-      actorType: "USER",
-      actorId: actor.userId,
-      entityType: "campaign",
-      entityId: campaign.id,
-      action: "campaign.created",
-      metadata: { appointmentId },
-    });
-    return campaign;
+    return createCampaign(tx, { organizationId: actor.organizationId, locationId: actor.locationId, userId: actor.userId }, appointment, now);
   });
+}
+
+async function createCampaign(
+  tx: Prisma.TransactionClient,
+  by: RoundBy,
+  appointment: Awaited<ReturnType<Prisma.TransactionClient["appointment"]["findFirstOrThrow"]>>,
+  now: Date,
+) {
+  if (appointment.status !== "CANCELLED") throw new DomainError("invalid", "Only a cancelled appointment can be refilled.");
+  if (appointment.startAt <= now) throw new DomainError("invalid", "This opening has already started.");
+
+  const existing = await tx.recoveryCampaign.findUnique({ where: { appointmentId: appointment.id } });
+  if (existing) return existing;
+
+  const location = await loadLocation(tx, by.locationId);
+  const rules: RulesSnapshot = {
+    minLeadMinutes: location.minLeadMinutes,
+    offerTtlMinutes: location.offerTtlMinutes,
+    offerBatchSize: location.offerBatchSize,
+    quietHoursStart: location.quietHoursStart,
+    quietHoursEnd: location.quietHoursEnd,
+    timezone: location.timezone,
+  };
+  const campaign = await tx.recoveryCampaign.create({
+    data: {
+      locationId: by.locationId,
+      appointmentId: appointment.id,
+      serviceId: appointment.serviceId,
+      resourceId: appointment.resourceId,
+      startAt: appointment.startAt,
+      endAt: appointment.endAt,
+      valuePaise: appointment.valuePaise,
+      rulesSnapshot: rules as unknown as Prisma.InputJsonValue,
+      expiresAt: new Date(appointment.startAt.getTime() - rules.minLeadMinutes * 60_000),
+      createdById: by.userId,
+    },
+  });
+  await recordAudit(tx, {
+    organizationId: by.organizationId,
+    actorType: by.userId ? "USER" : "SYSTEM",
+    actorId: by.userId ?? undefined,
+    entityType: "campaign",
+    entityId: campaign.id,
+    action: "campaign.created",
+    metadata: { appointmentId: appointment.id },
+  });
+  return campaign;
+}
+
+/**
+ * Opens a campaign for a cancellation reported by another booking tool and sends the first
+ * round straight away. Returns null when the slot can't be offered (too close to start, quiet
+ * hours, or nobody fits); the campaign then waits for staff.
+ */
+export async function startRecoveryForSystem(db: PrismaClient, by: Omit<RoundBy, "userId">, appointmentId: string, opts: LaunchOptions) {
+  const now = opts.now ?? new Date();
+  const campaign = await db.$transaction(async (tx) => {
+    const appointment = await tx.appointment.findFirstOrThrow({ where: { id: appointmentId, locationId: by.locationId } });
+    return createCampaign(tx, { ...by, userId: null }, appointment, now);
+  });
+  try {
+    await db.$transaction(async (tx) => {
+      const fresh = await tx.recoveryCampaign.findUniqueOrThrow({ where: { id: campaign.id }, include: { appointment: { select: { customerId: true } } } });
+      if (fresh.status !== "DRAFT") return;
+      await writeRound(tx, { ...by, userId: null }, fresh, opts);
+    });
+  } catch (err) {
+    if (!(err instanceof DomainError)) throw err;
+  }
+  return campaign;
 }
 
 /** Everything the campaign screen shows: the slot, ranked audience with reasons, and the exact message. */
@@ -324,7 +357,13 @@ async function expireOpenOffers(db: Db, campaignId: string, status: "EXPIRED" | 
  * Called when staff book a resource directly: any running campaign for an overlapping time
  * on that resource is closed, so customers can't claim a slot that was filled by hand.
  */
-export async function closeCampaignsForBookedTime(db: Db, actor: Actor, resourceId: string, startAt: Date, endAt: Date) {
+export async function closeCampaignsForBookedTime(
+  db: Db,
+  actor: Pick<Actor, "organizationId" | "locationId">,
+  resourceId: string,
+  startAt: Date,
+  endAt: Date,
+) {
   const overlapping = await db.recoveryCampaign.findMany({
     where: {
       locationId: actor.locationId,
@@ -494,6 +533,21 @@ export async function claimOffer(db: Db, token: string, opts: { now?: Date } = {
           },
         });
       }
+
+      // Tell connected booking tools, so the refilled slot shows up in their calendar too.
+      const origin = await tx.appointment.findUniqueOrThrow({ where: { id: c.appointmentId }, select: { integrationId: true, externalId: true } });
+      await enqueueWebhooks(tx, c.locationId, "slot.claimed", {
+        appointment: {
+          id: appointment.id,
+          startAt: c.startAt.toISOString(),
+          endAt: c.endAt.toISOString(),
+          service: c.service.name,
+          staff: c.resource.name,
+          valuePaise: c.valuePaise,
+          customer: { name: customer.name, phone: customer.phone, email: customer.email },
+        },
+        replaces: { appointmentId: c.appointmentId, integrationId: origin.integrationId, externalId: origin.externalId },
+      });
 
       await recordAudit(tx, {
         organizationId: c.location.organizationId,

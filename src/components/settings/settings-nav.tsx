@@ -10,6 +10,7 @@ const TABS = [
   { href: "/app/settings/staff", label: "Staff" },
   { href: "/app/settings/team", label: "Team" },
   { href: "/app/settings/app", label: "Phone app" },
+  { href: "/app/settings/integrations", label: "Integrations" },
   { href: "/app/settings/activity", label: "Activity" },
 ];
 

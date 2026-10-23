@@ -46,6 +46,9 @@ const VERBS: Record<string, string> = {
   "member.joined": "joined the team",
   "member.role_changed": "changed a team member's role",
   "member.removed": "removed someone from the team",
+  "integration.created": "connected a booking tool",
+  "integration.updated": "updated a booking tool connection",
+  "integration.revoked": "removed a booking tool connection",
 };
 
 function iconFor(e: Event) {

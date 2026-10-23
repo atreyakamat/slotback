@@ -142,6 +142,7 @@ model Location {
   waitlistEntries WaitlistEntry[]
   campaigns       RecoveryCampaign[]
   outboxMessages  OutboxMessage[]
+  integrations    Integration[]
 
   @@index([organizationId])
   @@map("locations")
@@ -278,7 +279,12 @@ model Appointment {
   recoveryCampaign RecoveryCampaign? @relation("CampaignOrigin")
   /// Set when this appointment was booked by claiming a recovery offer.
   claim            Claim?
+  /// For bookings synced from another scheduler: which connection sent it, and its id there.
+  integrationId    String?           @map("integration_id")
+  externalId       String?           @map("external_id")
+  integration      Integration?      @relation(fields: [integrationId], references: [id], onDelete: SetNull)
 
+  @@unique([integrationId, externalId])
   @@index([locationId, startAt])
   @@index([resourceId, startAt])
   @@map("appointments")
@@ -499,4 +505,56 @@ model RateLimitHit {
 
   @@index([key, createdAt])
   @@map("rate_limit_hits")
+}
+
+// ─── Integrations ────────────────────────────────────────────────────────────
+
+/// A connection from another booking tool. It pushes bookings and cancellations to the SlotBack
+/// API with a secret key (only its hash is stored), and can receive signed webhooks when SlotBack
+/// refills a slot, so the other tool's calendar stays in step.
+model Integration {
+  id            String        @id @default(cuid())
+  locationId    String        @map("location_id")
+  name          String
+  /// First characters of the key, so staff can tell keys apart. Not enough to use it.
+  keyPrefix     String        @map("key_prefix")
+  keyHash       String        @unique @map("key_hash")
+  /// HTTPS endpoint that receives signed events. Optional.
+  webhookUrl    String?       @map("webhook_url")
+  /// Start offering a slot to the waitlist as soon as the other tool reports a cancellation.
+  autoRefill    Boolean       @default(true) @map("auto_refill")
+  createdById   String?       @map("created_by_id")
+  lastUsedAt    DateTime?     @map("last_used_at")
+  revokedAt     DateTime?     @map("revoked_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  location      Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+  deliveries    WebhookDelivery[]
+
+  @@index([locationId])
+  @@map("integrations")
+}
+
+enum WebhookStatus {
+  QUEUED
+  DELIVERED
+  FAILED
+}
+
+/// An event waiting to be (or already) sent to an integration's webhook, retried with backoff.
+model WebhookDelivery {
+  id            String        @id @default(cuid())
+  integrationId String        @map("integration_id")
+  event         String
+  payload       Json
+  status        WebhookStatus @default(QUEUED)
+  attempts      Int           @default(0)
+  nextAttemptAt DateTime      @default(now()) @map("next_attempt_at")
+  lastError     String?       @map("last_error")
+  deliveredAt   DateTime?     @map("delivered_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  integration   Integration   @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@map("webhook_deliveries")
 }

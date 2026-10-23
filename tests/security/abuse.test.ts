@@ -68,3 +68,11 @@ describe.skipIf(!hasTestDb)("attack: reading the database directly", () => {
   });
 });
 
+
+describe("attack: using the public demo to message real people", () => {
+  it("demo workspaces always use the simulated provider, whatever the site is configured for", async () => {
+    const { providerFor } = await import("@/server/messaging/registry");
+    expect(providerFor({ isDemo: true, configured: "whatsapp_cloud" }).name).toBe("demo");
+    expect(providerFor({ isDemo: true }).name).toBe("demo");
+  });
+});
