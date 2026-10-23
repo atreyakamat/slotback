@@ -5,6 +5,8 @@ import { fontsLoaded } from "./fonts";
 import { ReelProps, SlotBackReel } from "./SlotBackReel";
 import { reels } from "./series/reels";
 import { SeriesReelProps, SeriesReelVideo, seriesDuration } from "./series/SeriesReelVideo";
+import { KineticProps, KineticVideo, kineticDuration } from "./kinetic/KineticVideo";
+import { series04 } from "./kinetic/reels-04";
 
 const handle = delayRender("Loading fonts");
 fontsLoaded.then(() => continueRender(handle));
@@ -38,5 +40,19 @@ export const RemotionRoot: React.FC = () => (
           ))}
       </Folder>
     ))}
+    <Folder name="Series04">
+      {series04.map((r) => (
+        <Composition
+          key={r.id}
+          id={r.id}
+          component={KineticVideo}
+          durationInFrames={kineticDuration(r.id)}
+          fps={FPS}
+          width={WIDTH}
+          height={HEIGHT}
+          defaultProps={{ reelId: r.id, withSong: true } satisfies KineticProps}
+        />
+      ))}
+    </Folder>
   </>
 );

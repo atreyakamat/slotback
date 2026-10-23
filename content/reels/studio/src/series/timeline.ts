@@ -4,7 +4,7 @@ import { SeriesReel, Shot, TrackId } from "./types";
 
 // WINDOWS IN BRAZIL is mapped at 172 BPM, so one musical "beat" for cuts
 // is two detected beats there.
-const beatUnit: Record<TrackId, number> = { windows: 2, paixao: 1, cavuca: 1, struct: 1, phonk: 1 };
+export const beatUnit: Record<TrackId, number> = { windows: 2, paixao: 1, cavuca: 1, struct: 1, phonk: 1 };
 
 export const DEFAULT_END_CARD = 45;
 
