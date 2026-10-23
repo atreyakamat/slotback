@@ -40,6 +40,11 @@ const VERBS: Record<string, string> = {
   "organization.created": "created the business",
   "organization.onboarded": "finished setting up the business",
   "demo.seeded": "Demo workspace was reset",
+  "member.invited": "invited someone to the team",
+  "member.invite_revoked": "cancelled a team invite",
+  "member.joined": "joined the team",
+  "member.role_changed": "changed a team member's role",
+  "member.removed": "removed someone from the team",
 };
 
 function iconFor(e: Event) {

@@ -7,12 +7,13 @@ import { CheckEmail } from "./check-email";
 
 const idle: SignInState = { ok: false };
 
-export function SignInForm() {
+/** With `email`, the address is fixed (an invite is for one person) and the button says what happens next. */
+export function SignInForm({ email, submitLabel = "Email me a sign-in link" }: { email?: string; submitLabel?: string }) {
   const [attempt, setAttempt] = useState(0);
-  return <Inner key={attempt} onRetry={() => setAttempt((a) => a + 1)} />;
+  return <Inner key={attempt} email={email} submitLabel={submitLabel} onRetry={() => setAttempt((a) => a + 1)} />;
 }
 
-function Inner({ onRetry }: { onRetry: () => void }) {
+function Inner({ email, submitLabel, onRetry }: { email?: string; submitLabel: string; onRetry: () => void }) {
   const [state, action] = useActionState(requestSignInAction, idle);
   if (state.ok) return <CheckEmail message={state.message} devLink={state.devLink} onRetry={onRetry} />;
   const error = state.fieldErrors?.email;
@@ -26,6 +27,8 @@ function Inner({ onRetry }: { onRetry: () => void }) {
           autoComplete="email"
           inputMode="email"
           placeholder="you@yourbusiness.in"
+          defaultValue={email}
+          readOnly={email !== undefined}
           required
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "signin-email-error" : undefined}
@@ -33,7 +36,7 @@ function Inner({ onRetry }: { onRetry: () => void }) {
       </Field>
       {state.message && !state.fieldErrors ? <FormMessage state={state} /> : null}
       <SubmitButton size="lg" className="w-full" pendingLabel="Sending link…">
-        Email me a sign-in link
+        {submitLabel}
       </SubmitButton>
     </form>
   );

@@ -41,6 +41,7 @@ model Organization {
   onboardedAt DateTime?    @map("onboarded_at")
   createdAt   DateTime     @default(now()) @map("created_at")
   memberships Membership[]
+  invites     Invite[]
   locations   Location[]
   auditEvents AuditEvent[]
 
@@ -60,36 +61,57 @@ model Membership {
   @@map("memberships")
 }
 
+/// A pending invitation to join a business. The link carries a random token; only its hash
+/// is stored. Accepting needs a sign-in link sent to this exact email, so a forwarded link is useless.
+model Invite {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  email          String
+  name           String
+  role           Role         @default(STAFF)
+  tokenHash      String       @unique @map("token_hash")
+  invitedById    String       @map("invited_by_id")
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime?    @map("accepted_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("invites")
+}
+
 model Location {
-  id                 String       @id @default(cuid())
-  organizationId     String       @map("organization_id")
-  name               String
-  address            String?
-  phone              String?
-  timezone           String       @default("Asia/Kolkata")
-  currency           String       @default("INR")
+  id              String             @id @default(cuid())
+  organizationId  String             @map("organization_id")
+  name            String
+  address         String?
+  phone           String?
+  timezone        String             @default("Asia/Kolkata")
+  currency        String             @default("INR")
   /// Weekly opening hours: { "0": [{ "open": "10:00", "close": "20:00" }], ... } keyed by weekday (0 = Sunday).
-  businessHours      Json         @map("business_hours")
+  businessHours   Json               @map("business_hours")
   /// Minimum notice before a slot starts for it to be offered.
-  minLeadMinutes     Int          @default(60) @map("min_lead_minutes")
+  minLeadMinutes  Int                @default(60) @map("min_lead_minutes")
   /// How long an offer link stays claimable.
-  offerTtlMinutes    Int          @default(30) @map("offer_ttl_minutes")
+  offerTtlMinutes Int                @default(30) @map("offer_ttl_minutes")
   /// Customers contacted per campaign launch.
-  offerBatchSize     Int          @default(5) @map("offer_batch_size")
+  offerBatchSize  Int                @default(5) @map("offer_batch_size")
   /// No customer messages between these local times ("HH:mm").
-  quietHoursStart    String       @default("21:00") @map("quiet_hours_start")
-  quietHoursEnd      String       @default("09:00") @map("quiet_hours_end")
+  quietHoursStart String             @default("21:00") @map("quiet_hours_start")
+  quietHoursEnd   String             @default("09:00") @map("quiet_hours_end")
   /// Public code in the waitlist self-join link (/join/<code>). Created when first shared; rotating it retires old QR posters.
-  joinCode           String?      @unique @map("join_code")
-  createdAt          DateTime     @default(now()) @map("created_at")
-  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  services           Service[]
-  resources          Resource[]
-  customers          Customer[]
-  appointments       Appointment[]
-  waitlistEntries    WaitlistEntry[]
-  campaigns          RecoveryCampaign[]
-  outboxMessages     OutboxMessage[]
+  joinCode        String?            @unique @map("join_code")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services        Service[]
+  resources       Resource[]
+  customers       Customer[]
+  appointments    Appointment[]
+  waitlistEntries WaitlistEntry[]
+  campaigns       RecoveryCampaign[]
+  outboxMessages  OutboxMessage[]
 
   @@index([organizationId])
   @@map("locations")
@@ -241,24 +263,24 @@ enum WaitlistStatus {
 }
 
 model WaitlistEntry {
-  id              String         @id @default(cuid())
-  locationId      String         @map("location_id")
-  customerId      String         @map("customer_id")
+  id             String         @id @default(cuid())
+  locationId     String         @map("location_id")
+  customerId     String         @map("customer_id")
   /// Null means "any service".
-  serviceId       String?        @map("service_id")
+  serviceId      String?        @map("service_id")
   /// Acceptable weekdays, 0 = Sunday. Empty means any day.
-  preferredDays   Int[]          @map("preferred_days")
+  preferredDays  Int[]          @map("preferred_days")
   /// Acceptable local time window, in minutes after midnight.
-  earliestMinute  Int            @default(0) @map("earliest_minute")
-  latestMinute    Int            @default(1440) @map("latest_minute")
-  status          WaitlistStatus @default(ACTIVE)
-  notes           String?
-  expiresAt       DateTime?      @map("expires_at")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  location        Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  customer        Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  service         Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  offers          Offer[]
+  earliestMinute Int            @default(0) @map("earliest_minute")
+  latestMinute   Int            @default(1440) @map("latest_minute")
+  status         WaitlistStatus @default(ACTIVE)
+  notes          String?
+  expiresAt      DateTime?      @map("expires_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  location       Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  customer       Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service        Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  offers         Offer[]
 
   @@index([locationId, status])
   @@map("waitlist_entries")
@@ -276,28 +298,28 @@ enum CampaignStatus {
 
 /// One campaign per cancelled appointment. Snapshot fields describe the open slot.
 model RecoveryCampaign {
-  id             String         @id @default(cuid())
-  locationId     String         @map("location_id")
-  appointmentId  String         @unique @map("appointment_id")
-  serviceId      String         @map("service_id")
-  resourceId     String         @map("resource_id")
-  startAt        DateTime       @map("start_at")
-  endAt          DateTime       @map("end_at")
-  valuePaise     Int            @map("value_paise")
-  status         CampaignStatus @default(DRAFT)
+  id            String         @id @default(cuid())
+  locationId    String         @map("location_id")
+  appointmentId String         @unique @map("appointment_id")
+  serviceId     String         @map("service_id")
+  resourceId    String         @map("resource_id")
+  startAt       DateTime       @map("start_at")
+  endAt         DateTime       @map("end_at")
+  valuePaise    Int            @map("value_paise")
+  status        CampaignStatus @default(DRAFT)
   /// Eligibility rules in force at launch, for auditability.
-  rulesSnapshot  Json           @map("rules_snapshot")
-  expiresAt      DateTime?      @map("expires_at")
-  launchedAt     DateTime?      @map("launched_at")
-  claimedAt      DateTime?      @map("claimed_at")
-  createdById    String?        @map("created_by_id")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  location       Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  appointment    Appointment    @relation("CampaignOrigin", fields: [appointmentId], references: [id])
-  service        Service        @relation(fields: [serviceId], references: [id])
-  resource       Resource       @relation(fields: [resourceId], references: [id])
-  offers         Offer[]
-  claim          Claim?
+  rulesSnapshot Json           @map("rules_snapshot")
+  expiresAt     DateTime?      @map("expires_at")
+  launchedAt    DateTime?      @map("launched_at")
+  claimedAt     DateTime?      @map("claimed_at")
+  createdById   String?        @map("created_by_id")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  location      Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  appointment   Appointment    @relation("CampaignOrigin", fields: [appointmentId], references: [id])
+  service       Service        @relation(fields: [serviceId], references: [id])
+  resource      Resource       @relation(fields: [resourceId], references: [id])
+  offers        Offer[]
+  claim         Claim?
 
   @@index([locationId, status])
   @@map("recovery_campaigns")

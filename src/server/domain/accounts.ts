@@ -69,10 +69,17 @@ export async function createBusiness(db: Db, input: NewBusiness) {
   });
 }
 
-/** The workspace an email signs into: its oldest membership, and that business's first location. */
-export async function findSignIn(db: Db, email: string) {
+/**
+ * The workspace an email signs into: the business it just joined if given, otherwise its oldest
+ * membership, and that business's first location.
+ */
+export async function findSignIn(db: Db, email: string, preferOrganizationId?: string) {
   const membership = await db.membership.findFirst({
-    where: { user: { email: normalizeEmail(email) }, organization: { isDemo: false } },
+    where: {
+      user: { email: normalizeEmail(email) },
+      organization: { isDemo: false },
+      ...(preferOrganizationId ? { organizationId: preferOrganizationId } : {}),
+    },
     orderBy: { createdAt: "asc" },
     select: {
       userId: true,
