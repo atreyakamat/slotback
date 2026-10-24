@@ -231,6 +231,25 @@ const series01: SeriesReel[] = [
       { type: "flip", beats: 5, headline: "Back to\n*fully booked.*", time: "11:30 AM", before: "Cancelled", after: "Filled · Tanya" },
     ],
   },
+  // A standalone reel in the style of 01-03, added after series 04.
+  {
+    id: "r137-best-client",
+    number: 137,
+    title: "Your best client just cancelled",
+    track: "cavuca",
+    songStart: 33.2,
+    drop: 36.73,
+    hook: { type: "notif", beats: 0, headline: "Saturday, 3:52.\nYour best client\n*just cancelled.*", sender: "Meera", message: "so sorry, can't make 4 today 🙏", time: "3:52 PM" },
+    shots: [
+      { type: "chair", beats: 4, headline: "Empty chair.\n*Staff still paid.*", stamp: "EMPTY" },
+      { type: "list", beats: 8, bg: "ink", headline: "So you try:", items: ["Calling people *one by one.*", "A discount that *cheapens you.*", "Hoping someone *walks in.*"] },
+      { type: "openSlot", beats: 4, headline: "Or 1 tap.\n*Your whole waitlist knows.*", sub: "Today · 4:00 PM" },
+      { type: "claim", beats: 4, headline: "First to tap\n*gets it.*", slot: "A 4:00 PM blow-dry" },
+      { type: "flip", beats: 5, headline: "4:06.\n*Back to full.*", time: "4:00 PM", before: "Cancelled", after: "Filled · Tanvi" },
+      { type: "slam", beats: 4, bg: "lime", lines: ["No calls.", "No discounts.", "*No empty chair.*"] },
+      { type: "slam", beats: 4, lines: ["Try it on your", "*next cancellation.*"] },
+    ],
+  },
 ];
 
 export const reels: SeriesReel[] = [...series01, ...series02, ...series03];
