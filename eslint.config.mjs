@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Marketing content projects (e.g. Remotion reels) have their own tooling.
+    "content/**",
   ]),
 ]);
 
