@@ -30,6 +30,8 @@ To present it, follow [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
 
 ## Getting started
 
+**Just want to run the demo?** With Docker installed: `docker compose up --build`, then open http://localhost:3000. See [docs/DOCKER_DEMO.md](docs/DOCKER_DEMO.md), including how to claim on a phone.
+
 Requirements: Node 22+, pnpm 10, Postgres 15+ (local install or `docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`).
 
 ```bash
