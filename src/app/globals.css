@@ -1,26 +1,469 @@
 @import "tailwindcss";
 
+/* Theme is driven by data-theme on <html> ("light" | "dark"), set before first paint by ThemeScript. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * SlotBack brand palette (matches the logo, Reel and Instagram story).
+ * Fixed brand colours never change with the theme; use them for brand moments (logo, hero).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-ink: #07140f;
+  --brand-green: #0f2e22;
+  --brand-green-light: #1a4434;
+  --brand-lime: #c6f432;
+  --brand-cream: #f5efe1;
+  --brand-muted: #8fa89b;
+  --brand-coral: #ff8f85; /* cancellations on brand-green surfaces */
+}
+
+/*
+ * Semantic tokens: every component uses these, never raw hex.
+ * Contrast checked (WCAG AA, 4.5:1 for text) against background, surface and raised surface in both themes.
+ * Lime is a fill or highlight only in light mode: as text on cream it is ~1.1:1 and unreadable.
+ */
+:root {
+  --background: #f5efe1; /* cream */
+  --surface: #fffcf5;
+  --surface-raised: #ede6d4;
+  --text: #07140f; /* ink */
+  --text-muted: #56675d;
+  --border: #dcd3be;
+  --accent: #0f2e22; /* green: primary buttons, links, focus, chart marks */
+  --accent-foreground: #f5efe1;
+  --highlight: #c6f432; /* lime: fills behind ink text, live dots, brand moments */
+  --highlight-foreground: #07140f;
+  --success: #17733f;
+  --warning: #855700;
+  --danger: #b42318;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --background: #07140f; /* ink */
+  --surface: #0f2e22; /* green */
+  --surface-raised: #1a4434; /* green light */
+  --text: #f5efe1; /* cream */
+  --text-muted: #a3b8ac;
+  --border: #24503e;
+  --accent: #c6f432; /* lime */
+  --accent-foreground: #07140f;
+  --highlight: #c6f432;
+  --highlight-foreground: #07140f;
+  --success: #5bd99a;
+  --warning: #f2c66d;
+  --danger: #ff8f85;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-foreground: var(--text);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-light: var(--brand-green-light);
+  --color-brand-lime: var(--brand-lime);
+  --color-brand-cream: var(--brand-cream);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-coral: var(--brand-coral);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Display face for page titles and the landing page only. */
+  --font-display: var(--font-archivo-black), var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background: var(--background);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  ::selection {
+    background: var(--highlight);
+    color: var(--highlight-foreground);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* Subtle theme cross-fade; disabled for users who prefer reduced motion. */
+  html.theme-transition,
+  html.theme-transition * {
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-transition,
+    html.theme-transition * {
+      transition: none !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Landing page motion, without an animation library ───────────────────
+   Everything here is decorative. Under reduced motion each effect shows its
+   finished state. */
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.rise-word {
+  display: inline-block;
+  animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+/* Reveal on scroll with CSS scroll timelines, so it needs no JavaScript.
+   Browsers without scroll timelines simply show the content. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 30%;
+  }
+}
+
+/* Words ink in as the statement scrolls past (browsers without scroll timelines show it solid). */
+@keyframes ink {
+  from {
+    opacity: 0.18;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@supports (animation-timeline: view()) {
+  .ink-text {
+    view-timeline-name: --ink;
+  }
+  .ink-text > span {
+    animation: ink linear both;
+    animation-timeline: --ink;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Stroke drawing tied to scroll: pair with pathLength="1" on the SVG path. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@supports (animation-timeline: view()) {
+  .draw {
+    stroke-dasharray: 1;
+    animation: draw linear both;
+    animation-timeline: --draw;
+    animation-range: var(--range, entry 40% cover 50%);
+  }
+  .draw-scope {
+    view-timeline-name: --draw;
+  }
+}
+
+/* More scroll-linked effects. Each uses a scroll or view timeline; unsupported browsers show the end state. */
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes drift-out {
+  to {
+    opacity: 0.25;
+    transform: translateY(-48px) scale(0.97);
+  }
+}
+@keyframes drift-out-far {
+  to {
+    transform: translateY(-140px) rotate(-2deg);
+  }
+}
+@keyframes wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-24px);
+  }
+}
+@keyframes from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-80px) rotate(-2deg);
+  }
+}
+@keyframes from-right {
+  from {
+    opacity: 0;
+    transform: translateX(80px) rotate(2deg);
+  }
+}
+@keyframes tilt-in {
+  from {
+    opacity: 0.3;
+    transform: perspective(1400px) rotateX(32deg) scale(0.88);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(140px) rotate(6deg);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(48px) scale(0.94);
+  }
+}
+@keyframes band-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-35%);
+  }
+}
+@keyframes band-right {
+  from {
+    transform: translateX(-35%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes expand {
+  from {
+    clip-path: inset(0 5% round 3rem);
+  }
+  to {
+    clip-path: inset(0 0 round 0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .scroll-progress {
+    transform-origin: left;
+    animation: grow-x linear both;
+    animation-timeline: scroll(root);
+  }
+  .drift-out,
+  .drift-out-far {
+    animation: drift-out linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .drift-out-far {
+    animation-name: drift-out-far;
+  }
+  .wipe {
+    animation: wipe cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 40%;
+  }
+  .from-left,
+  .from-right {
+    animation: from-left cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+  .from-right {
+    animation-name: from-right;
+  }
+  .tilt-in {
+    transform-origin: 50% 100%;
+    animation: tilt-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 45%;
+  }
+  .rise-in {
+    animation: rise-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+  .pop-in {
+    animation: pop-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+  .pop-in:nth-child(3n + 2) {
+    animation-range: entry 10% cover 38%;
+  }
+  .pop-in:nth-child(3n) {
+    animation-range: entry 20% cover 46%;
+  }
+  .band {
+    view-timeline-name: --band;
+  }
+  .band-left,
+  .band-right {
+    animation: band-left linear both;
+    animation-timeline: --band;
+    animation-range: cover;
+  }
+  .band-right {
+    animation-name: band-right;
+  }
+  .expand {
+    animation: expand linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+}
+
+/* Cursor spotlight for cards: the parent sets --x and --y on the hovered card. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--x, 50%) var(--y, 50%), color-mix(in oklab, var(--highlight) 22%, transparent), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+/* A light that travels around a button's edge. */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes beam {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+.beam {
+  position: relative;
+  isolation: isolate;
+}
+.beam::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--beam-angle), transparent 65%, var(--brand-cream) 85%, transparent);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: beam 3.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Fine film grain over the hero, drawn as an inline SVG so it costs no request. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-word,
+  .ink-text > span,
+  .beam::after {
+    animation: none !important;
+  }
+  .reveal,
+  .draw,
+  .scroll-progress,
+  .drift-out,
+  .drift-out-far,
+  .wipe,
+  .from-left,
+  .from-right,
+  .tilt-in,
+  .rise-in,
+  .pop-in,
+  .band-left,
+  .band-right,
+  .expand {
+    animation: none !important;
+  }
 }
