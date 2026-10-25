@@ -2,7 +2,7 @@
 
 Everything for finding, meeting and converting SlotBack's first customers in Goa, in the order you use it. The app code lives on the other branches; this branch is go-to-market only.
 
-**Approach:** lead with a genuine Goa market study of pre-booked businesses. Don't pitch. Show SlotBack only when an owner asks.
+**Approach:** lead with a genuine Goa market study of pre-booked businesses. Don't pitch. Every participant gets the report and a free trial (15 days to a month). Demo SlotBack only when an owner asks.
 
 ## Do it in this order
 
@@ -13,11 +13,11 @@ Everything for finding, meeting and converting SlotBack's first customers in Goa
 | 3 | Build the study Google Form from the 12 questions (15 min) | Playbook, "The 12 study questions" |
 | 4 | Open the pipeline sheet. Fill the 19 missing phone numbers from Google Maps | [`2-pipeline/goa-leads-pipeline-v1.xlsx`](2-pipeline/goa-leads-pipeline-v1.xlsx) |
 | 5 | Share the prospect guide link so owners can open it (Share button on the page) | [Live guide](https://claude.ai/artifact/AiBRqZ5kF1rsekRD6P7wEs) |
-| 6 | Send WhatsApp openers to the Fit A leads, 8–10 a day, one at a time. Send the 3 Gmail drafts | Sheet: "Open WhatsApp chat" column |
+| 6 | Send WhatsApp openers to the Fit A leads, 8–10 a day, one at a time. Send the 8 Gmail drafts | Sheet: "Open WhatsApp chat" column |
 | 7 | Walk in and run study meetings using the call script | Playbook, "Call script" |
 | 8 | Handle pushback with the objection table | Playbook, "Objection handling" |
 | 9 | After each meeting, send the guide and log notes. Set Stage to Met or Opportunity | [`4-prospect-guide/`](4-prospect-guide) |
-| 10 | Owner asks what you're building: show the demo and offer the 2-week trial (₹999/mo only if it fills 3+ slots) | Playbook, "4a" |
+| 10 | Owner asks what you're building: show the demo and set up their free trial (15 days to a month, their pick; ₹999/mo after only if they keep it) | Playbook, "4a" |
 | 11 | Partner or investor conversations: send the deck | [`5-pitch-deck/slotback-pitch-deck-v1.pdf`](5-pitch-deck/slotback-pitch-deck-v1.pdf) |
 | 12 | By Fri 30 Oct: send the Goa study report to every participant | Bring notes to Claude to draft it |
 

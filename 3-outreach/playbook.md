@@ -12,12 +12,12 @@ Lead with a Goa market study on how pre-booked businesses run. Offer SlotBack on
 
 ## The flow
 
-1. **DM** on WhatsApp, email or Instagram, inviting them into the study (10 min, or a 2-minute form).
+1. **DM** on WhatsApp, email or Instagram, inviting them into the study (10 min, or a 2-minute form). Participants get the report and a free trial (15 days to a month, their pick).
 2. **They reply:** book a slot within 48 hours, in person if possible.
 3. **Meeting (15 min):** run the study questions, listen, take notes. No product talk.
 4. **The turn:** share one insight and the efficiency guide. Then stop.
 5. **Branch:**
-    - They ask what you're building: 2-minute demo, offer the free setup trial. Stage = Opportunity.
+    - They ask what you're building: 2-minute demo, then set up their free trial. Stage = Opportunity.
     - They don't ask: thank them, promise the report. Stage = Met.
 6. **Report day:** send the study report to everyone. It ends with: "We're testing a small tool for the biggest gap we found. Reply if you want to try it."
 
@@ -54,30 +54,32 @@ Fastest way: ask the front desk "Who handles your appointments, and what's the b
 
 > Hi {Business} team, I'm Atreya. I'm running a short study of pre-booked businesses in Goa (clinics, studios and salons) on how bookings, cancellations and no-shows affect the working day.
 >
-> It takes 10 minutes, in person or on a call, and everyone who takes part gets the full Goa findings report free. Could I drop by this Saturday, or would a quick call Mon–Wed be easier?
+> It takes 10 minutes, in person or on a call. Could I drop by this week, or would a quick call be easier? If you're short on time, I can send a 2-minute form instead.
 >
-> If you're short on time, I can send a 2-minute form instead. Thank you!
+> As a thank-you, everyone who takes part gets the full Goa findings report free, plus a completely free trial of the small tool we're building from what we learn: 15 days, 20 days or a month, whichever suits you. Thank you!
 
 **WhatsApp follow-up** (2–3 days later)
 
 > Hi, just bringing this back up. We've heard from a few Goa {category} so far and the answers are interesting. Your view would really help, even the 2-minute form: {form link}
 
-**Email** (drafts for 3 physio clinics are in Gmail, unsent)
+**Email** (8 drafts are in Gmail, unsent)
 
-Subject: Goa study on pre-booked businesses (10 min, free report)
+Subject: Goa study on pre-booked businesses (10 min, free report + trial)
 
 > Hi {Business} team,
 >
 > I'm Atreya. I'm running a short study of pre-booked businesses in Goa on how bookings, cancellations and no-shows affect the day, and what owners do about them.
 >
-> Could I have 10 minutes, in person or on a call, this Saturday or Mon–Wed? Everyone who takes part gets the full Goa findings report free. If you're short on time, I can send a 2-minute form instead.
+> Could I have 10 minutes this week, in person at {area} or on a call? Any day from Tuesday to Saturday works for me. If you're short on time, I can send a 2-minute form instead.
+>
+> As a thank-you, everyone who takes part gets two things, both completely free: the full Goa findings report, and a free trial of the small tool we're building from what we learn, for 15 days, 20 days or a full month, whichever suits you. No cost and no commitment.
 >
 > Thank you,
 > Atreya
 
 **Instagram DM**
 
-> Hi! I'm running a short study of pre-booked businesses in Goa on bookings and no-shows. Could I ask you 3 quick questions here, or send a 2-minute form? Everyone who joins gets the Goa report free.
+> Hi! I'm running a short study of pre-booked businesses in Goa on bookings and no-shows. Could I ask you 3 quick questions here, or send a 2-minute form? Everyone who joins gets the Goa report and a free trial of our tool, both free.
 
 **Walk-in line**
 
@@ -126,7 +128,7 @@ Then stop talking. Count to five.
 
 After the demo:
 
-> If you'd like, I'll set it up for you free for two weeks. If it fills at least 3 slots, it's ₹999 a month after that; if not, you owe nothing. Shall we try it?
+> Your free trial is ready whenever you are: 15 days, 20 days or a month, you pick. I set everything up. After that it's ₹999 a month only if you want to keep it. Which length works for you?
 
 **4b. If they don't ask**
 
@@ -154,13 +156,13 @@ After the demo:
 | "We already have software." | "Which one? Does it offer the open slot to your waiting list automatically?" If yes (Fresha, Zenoti), step back. If no, it runs alongside. |
 | "We just call people ourselves." | "How long does that take, and how often does it work? This sends one message and the first to tap gets it." |
 | "My clients won't use links." | "It's a normal WhatsApp message with one button. Let's try it on five of your regulars." |
-| "₹999 is too much." | "Fair. What's one empty slot worth to you? If it doesn't fill 3 slots in two weeks, you don't pay." |
+| "₹999 is too much." | "Fair. Try it free first, up to a month. What's one empty slot worth to you? If it doesn't pay for itself, you just stop." |
 | "I'm worried about spamming my clients." | "Only clients who join your waiting list get messages, with a limit per opening. You see every message before it's turned on." |
 | "Let me think about it." | "Of course. What would you need to see to say yes?" Then book a follow-up date. |
 
 ## After the weekend
 
-A lead becomes a client only when they agree to a trial with a payment condition and hand over their waiting-list contacts.
+A lead becomes a trial client when they pick a trial length and hand over their waiting-list contacts. They become a paying client only if they keep it after the trial.
 
 - **Mon–Wed:** run booked meetings; set up trials for anyone who asked.
 - **By Fri 30 Oct:** send the Goa study report to every participant.
