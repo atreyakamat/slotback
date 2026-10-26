@@ -235,7 +235,12 @@ export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId, withSong = tr
           {p.s.big && <BigLine text={p.s.big} dur={p.dur} />}
           {p.s.chip && <Chip text={p.s.chip} dur={p.dur} />}
           {p.s.sub && <Subtitle who={p.s.sub[0] || undefined} text={p.s.sub[1]} dur={p.dur} />}
-          {p.s.leak && <Leak seed={i * 7 + 3} />}
+          {p.s.leak && (
+            // Only mount the leak while it's visible.
+            <Sequence durationInFrames={26} layout="none">
+              <Leak seed={i * 7 + 3} />
+            </Sequence>
+          )}
         </Sequence>
       ))}
       <Sequence from={0} durationInFrames={endFrom}>

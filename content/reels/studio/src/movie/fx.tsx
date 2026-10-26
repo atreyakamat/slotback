@@ -1,7 +1,6 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, OffthreadVideo, Solid, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, interpolate, OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
 import { Circle, StrikeThrough, Underline } from "@remotion/rough-notation";
-import { lightLeak } from "@remotion/effects/light-leak";
 import { colors, fonts } from "../theme";
 
 // Motion-graphics layers for the movie reels (second batch onwards). Each one is
@@ -10,13 +9,16 @@ import { colors, fonts } from "../theme";
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
-// Warm film light leak washing over a cut, used on the drop.
+// Warm film light leak washing over a cut, used on the drop. Plain CSS gradients:
+// the WebGL lightLeak() effect looked similar but made renders ~6x slower here.
 export const Leak: React.FC<{ seed: number }> = ({ seed }) => {
   const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const side = seed % 2 === 0 ? 1 : -1;
+  const x = interpolate(frame, [0, 26], [50 - side * 60, 50 + side * 70], clamp);
   return (
-    <AbsoluteFill style={{ mixBlendMode: "screen", pointerEvents: "none", opacity: interpolate(frame, [0, 4, 18, 26], [0, 0.9, 0.7, 0], clamp) }}>
-      <Solid width={width} height={height} effects={[lightLeak({ seed, hueShift: 40, progress: interpolate(frame, [0, 26], [0.1, 0.9], clamp) })]} />
+    <AbsoluteFill style={{ mixBlendMode: "screen", pointerEvents: "none", opacity: interpolate(frame, [0, 4, 16, 26], [0, 0.85, 0.6, 0], clamp) }}>
+      <AbsoluteFill style={{ background: `radial-gradient(ellipse 70% 90% at ${x}% 40%, rgba(255,170,60,0.95), rgba(255,90,40,0.55) 40%, transparent 75%)` }} />
+      <AbsoluteFill style={{ background: `radial-gradient(ellipse 40% 60% at ${100 - x}% 70%, rgba(255,220,140,0.7), transparent 70%)` }} />
     </AbsoluteFill>
   );
 };
