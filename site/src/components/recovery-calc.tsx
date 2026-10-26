@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, useMotionValue, useTransform, motion } from "motion/react";
+import { animate, motion, useMotionValue, useTransform } from "motion/react";
 import { useEffect, useState } from "react";
 
 function Slider({ label, value, min, max, step, format, onChange }: { label: string; value: number; min: number; max: number; step: number; format: (n: number) => string; onChange: (n: number) => void }) {
@@ -8,10 +8,10 @@ function Slider({ label, value, min, max, step, format, onChange }: { label: str
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4">
-        <label htmlFor={id} className="text-sm text-cream/70">
+        <label htmlFor={id} className="text-sm text-muted">
           {label}
         </label>
-        <output htmlFor={id} className="font-mono text-lg tabular-nums">
+        <output htmlFor={id} className="font-semibold tabular-nums">
           {format(value)}
         </output>
       </div>
@@ -32,34 +32,33 @@ function Slider({ label, value, min, max, step, format, onChange }: { label: str
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-/** Monthly revenue a business could win back, from three numbers they know. */
+/** Monthly revenue a business could recover, from three numbers it knows. */
 export function RecoveryCalc() {
-  const [cancels, setCancels] = useState(8);
-  const [value, setValue] = useState(1500);
+  const [cancels, setCancels] = useState(6);
+  const [value, setValue] = useState(1200);
   const [rate, setRate] = useState(30);
   const monthly = cancels * (52 / 12) * value * (rate / 100);
 
   const mv = useMotionValue(monthly);
   const text = useTransform(mv, inr);
-  const wdth = useTransform(mv, [0, 150000], [80, 150], { clamp: true });
   useEffect(() => {
-    const c = animate(mv, monthly, { type: "spring", stiffness: 120, damping: 20 });
+    const c = animate(mv, monthly, { duration: 0.4, ease: "easeOut" });
     return () => c.stop();
   }, [monthly, mv]);
 
   return (
-    <div className="grid gap-10 rounded-[32px] border border-cream/10 bg-green/50 p-6 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-      <div className="grid gap-8">
-        <Slider label="Cancellations a week" value={cancels} min={1} max={40} step={1} format={String} onChange={setCancels} />
-        <Slider label="Average appointment" value={value} min={300} max={6000} step={100} format={inr} onChange={setValue} />
-        <Slider label="Share SlotBack refills" value={rate} min={10} max={60} step={5} format={(n) => `${n}%`} onChange={setRate} />
+    <div className="grid overflow-hidden rounded-2xl border border-line bg-surface lg:grid-cols-[1.2fr_1fr]">
+      <div className="grid gap-7 p-6 sm:p-8">
+        <Slider label="Cancellations per week" value={cancels} min={1} max={30} step={1} format={String} onChange={setCancels} />
+        <Slider label="Average appointment value" value={value} min={300} max={5000} step={100} format={inr} onChange={setValue} />
+        <Slider label="Share of slots refilled" value={rate} min={10} max={60} step={5} format={(n) => `${n}%`} onChange={setRate} />
       </div>
-      <div className="rounded-[24px] bg-lime p-6 text-ink sm:p-8">
-        <p className="font-mono text-xs tracking-widest uppercase">Won back each month</p>
-        <motion.p className="stretch mt-3 text-5xl leading-none tabular-nums sm:text-7xl" style={{ "--wdth": wdth } as React.CSSProperties} aria-live="polite">
+      <div className="flex flex-col justify-center border-t border-line bg-green p-6 text-white sm:p-8 lg:border-t-0 lg:border-l">
+        <p className="text-sm text-white/70">Estimated revenue recovered per month</p>
+        <motion.p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl" aria-live="polite">
           {text}
         </motion.p>
-        <p className="mt-5 text-sm text-ink/70">An estimate from your numbers, not a promise. A pilot shows you the real figure.</p>
+        <p className="mt-4 text-sm text-white/70">An estimate based on your inputs. Your pilot will show the actual figure.</p>
       </div>
     </div>
   );
