@@ -7,8 +7,8 @@ These posting files have sound effects only. Add the song in Instagram at the tr
 | File | Line | Song | IG trim start | Drop lands on |
 | --- | --- | --- | --- | --- |
 | m01-kitne-cancel-hue.mp4 | "Kitne cancel hue?" (Sholay) | STRUCT (Slowed) | 0:29.1 | the opening line |
-| m02-picture-abhi-baaki-hai.mp4 | "Picture abhi baaki hai, mere dost" (Om Shanti Om) | PAIXÃO (Sped Up) | ~0:46.1 | "End mein sab theek ho jaata hai" |
-| m03-mogambo-khush-hua.mp4 | "Mogambo khush hua" (Mr. India) | Cavuca Funk | ~0:32.3 | "One tap" |
-| m04-houston-we-have-a-problem.mp4 | "Houston, we have a problem" (Apollo 13) | WINDOWS IN BRAZIL | ~0:07.2 | "Houston, we have a problem" |
+| m02-picture-abhi-baaki-hai.mp4 | "Picture abhi baaki hai, mere dost" (Om Shanti Om) | PAIXÃO (Sped Up) | 0:46.3 | "End mein sab theek ho jaata hai" |
+| m03-mogambo-khush-hua.mp4 | "Mogambo khush hua" (Mr. India) | Cavuca Funk | 0:32.0 | "One tap" |
+| m04-houston-we-have-a-problem.mp4 | "Houston, we have a problem" (Apollo 13) | WINDOWS IN BRAZIL | 0:07.3 | "Houston, we have a problem" |
 
 Source: `content/reels/studio/src/movie/` (scripts in `reels.ts`). Clips must be copied to `studio/public/stock/` before rendering.
