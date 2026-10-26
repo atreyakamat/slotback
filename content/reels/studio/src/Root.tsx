@@ -9,6 +9,8 @@ import { KineticProps, KineticVideo, kineticDuration } from "./kinetic/KineticVi
 import { series04 } from "./kinetic/reels-04";
 import { PoolReelProps, PoolReelVideo, poolDuration } from "./pool/PoolReelVideo";
 import { poolReels } from "./pool/reels";
+import { MovieReelProps, MovieReelVideo, movieDuration } from "./movie/MovieReel";
+import { movieReels } from "./movie/reels";
 
 const handle = delayRender("Loading fonts");
 fontsLoaded.then(() => continueRender(handle));
@@ -67,5 +69,19 @@ export const RemotionRoot: React.FC = () => (
       defaultProps={{ reelId: poolReels[0].id } satisfies PoolReelProps}
       calculateMetadata={({ props }) => ({ durationInFrames: poolDuration(props.reelId) })}
     />
+    <Folder name="Movie">
+      {movieReels.map((r) => (
+        <Composition
+          key={r.id}
+          id={r.id}
+          component={MovieReelVideo}
+          durationInFrames={movieDuration(r.id)}
+          fps={FPS}
+          width={WIDTH}
+          height={HEIGHT}
+          defaultProps={{ reelId: r.id } satisfies MovieReelProps}
+        />
+      ))}
+    </Folder>
   </>
 );
