@@ -44,6 +44,8 @@ These can be edited and commented on. The files above are snapshots from 23 Oct 
 
 - [Demand verdict and first 10 customers](https://claude.ai/artifact/Nu1bZKGvLdYX6wF9s9QdaG)
 - [Weekend GTM playbook](https://claude.ai/artifact/SxT1b4WkHrhwUqYhVqd2TE)
+- [Call list: Goa leads](https://claude.ai/artifact/ADFiuzJPFHKRVdAvg6HUrh) (tap-to-call, priority order)
+- [Phone script: book the meeting](https://claude.ai/artifact/Qf15Wbz7tm33Cqp8Lp1BmK) (front desk, owner, objections, locking the slot)
 - [Discovery outreach kit](https://claude.ai/artifact/Q6cuQTMaEqEQDYDv3knfn7) (earlier version, before the study framing)
 - [Booking efficiency guide, text version](https://claude.ai/artifact/NzABFgprA2QfYYBMbWhVyu)
 - [The Empty Chair Guide, live page](https://claude.ai/artifact/AiBRqZ5kF1rsekRD6P7wEs)
