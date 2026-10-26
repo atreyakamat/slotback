@@ -17,10 +17,7 @@ COPY . .
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-# The build only checks that these are set; it never connects. Real values come at runtime.
-RUN DATABASE_URL=postgresql://build:build@localhost:5432/build \
-    SESSION_SECRET=build-time-placeholder-not-used-at-runtime \
-    pnpm build
+RUN pnpm build
 
 FROM build AS runtime
 ENV NODE_ENV=production
