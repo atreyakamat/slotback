@@ -79,7 +79,7 @@ export const RemotionRoot: React.FC = () => (
           fps={FPS}
           width={WIDTH}
           height={HEIGHT}
-          defaultProps={{ reelId: r.id } satisfies MovieReelProps}
+          defaultProps={{ reelId: r.id, withSong: true } satisfies MovieReelProps}
         />
       ))}
     </Folder>

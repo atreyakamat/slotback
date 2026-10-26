@@ -11,7 +11,7 @@ import { movieReels, MovieScene } from "./reels";
 export const END_CARD = 54;
 const BAR = 150;
 
-export type MovieReelProps = { reelId: string };
+export type MovieReelProps = { reelId: string; withSong?: boolean };
 
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const inOut = (frame: number, at: number, len = 8) =>
@@ -174,19 +174,23 @@ const CutFlash: React.FC<{ at: number[] }> = ({ at }) => {
 export const movieTimeline = (reelId: string) => {
   const reel = movieReels.find((r) => r.id === reelId);
   if (!reel) throw new Error(`Unknown movie reel ${reelId}`);
+  const beat = (60 / reel.song.bpm) * 30;
   let f = 0;
   const placed = reel.scenes.map((s) => {
-    const p = { s, from: f, dur: Math.round(s.sec * 30) };
+    const end = Math.max(Math.round(f + beat), Math.round(Math.round((f + s.sec * 30) / beat) * beat));
+    const p = { s, from: f, dur: end - f };
     f += p.dur;
     return p;
   });
-  return { reel, placed, endFrom: f, total: f + END_CARD };
+  // Start the song so its drop lands on the cut into `dropScene`.
+  const songStart = Math.max(0, reel.song.drop - (placed[reel.song.dropScene]?.from ?? 0) / 30);
+  return { reel, placed, songStart, endFrom: f, total: f + END_CARD };
 };
 
 export const movieDuration = (reelId: string) => movieTimeline(reelId).total;
 
-export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId }) => {
-  const { reel, placed, endFrom, total } = movieTimeline(reelId);
+export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId, withSong = true }) => {
+  const { reel, placed, songStart, endFrom, total } = movieTimeline(reelId);
   const cuts = placed.slice(1).map((p) => p.from);
   const sfx: [number, string, number][] = [
     ...cuts.map((c): [number, string, number] => [Math.max(0, c - 4), "whoosh", 0.45]),
@@ -226,6 +230,13 @@ export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId }) => {
           <Audio src={staticFile(`audio/sfx/${name}.wav`)} volume={volume * 0.7} />
         </Sequence>
       ))}
+      {withSong && (
+        <Audio
+          src={staticFile(reel.song.file)}
+          trimBefore={Math.round(songStart * 30)}
+          volume={(f) => 0.75 * interpolate(f, [total - 20, total], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })}
+        />
+      )}
       <ProgressLine total={total} />
     </AbsoluteFill>
   );
