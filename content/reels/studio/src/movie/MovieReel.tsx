@@ -4,7 +4,11 @@ import { Audio } from "@remotion/media";
 import { colors, fonts } from "../theme";
 import { Grain } from "../components/effects";
 import { GlassBackdrop, PoolEndCard, glass } from "../pool/glass";
-import { movieReels, MovieScene } from "./reels";
+import { MovieScene, movieReels as batch1 } from "./reels";
+import { movieReels02 } from "./reels-02";
+import { AnnotatedWord, Counter, Leak, Split, Stamp, Title } from "./fx";
+
+const movieReels = [...batch1, ...movieReels02];
 
 // Stock-footage reels with a famous movie line as on-screen text. Clips are
 // Pexels (see content/reels/stock/CREDITS.md), copied to public/stock/ before rendering.
@@ -84,8 +88,8 @@ const Subtitle: React.FC<{ who?: string; text: string; dur: number }> = ({ who, 
         {words.map(({ w, on }, i) => {
           const o = inOut(frame, 2 + i * per, 4);
           return (
-            <span key={i} style={{ opacity: o, display: "inline-block", translate: `0 ${(1 - o) * 18}px`, marginRight: "0.26em", color: on ? colors.lime : undefined }}>
-              {w}
+            <span key={i} style={{ opacity: o, display: "inline-block", translate: `0 ${(1 - o) * 18}px`, marginRight: "0.26em" }}>
+              <AnnotatedWord raw={w} at={2 + i * per} lit={on} />
             </span>
           );
         })}
@@ -206,6 +210,10 @@ export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId, withSong = tr
     ...placed.filter((p) => p.s.big).map((p): [number, string, number] => [p.from + 1, "impact", 0.7]),
     ...placed.filter((p) => p.s.notif).map((p): [number, string, number] => [p.from + 5, "buzz", 0.7]),
     ...placed.filter((p) => p.s.chip).map((p): [number, string, number] => [p.from + Math.round(p.dur * 0.3), "success", 0.8]),
+    ...placed.filter((p) => p.s.stamp).map((p): [number, string, number] => [p.from + 8, "thud", 1]),
+    ...placed.filter((p) => p.s.count).map((p): [number, string, number] => [p.from + Math.round(p.dur * 0.65), "cash", 0.9]),
+    ...placed.filter((p) => p.s.split).map((p): [number, string, number] => [p.from + 2, "snap", 0.6]),
+    ...placed.filter((p) => p.s.title).map((p): [number, string, number] => [p.from, "swell", 0.6]),
     [Math.max(0, endFrom - 4), "whoosh", 0.5],
     [endFrom + 4, "pop", 0.8],
   ];
@@ -214,12 +222,20 @@ export const MovieReelVideo: React.FC<MovieReelProps> = ({ reelId, withSong = tr
       {placed.map((p, i) => (
         <Sequence key={i} from={p.from} durationInFrames={p.dur} name={`${i}. ${p.s.clip}`}>
           <Cut first={i === 0}>
-            <Clip s={p.s} dur={p.dur} />
+            {p.s.split ? (
+              <Split a={p.s.clip} fromA={p.s.from} b={p.s.split.b} fromB={p.s.split.fromB} labels={p.s.split.labels} win={p.s.split.win} dur={p.dur} />
+            ) : (
+              <Clip s={p.s} dur={p.dur} />
+            )}
           </Cut>
+          {p.s.title && <Title kicker={p.s.title[0]} text={p.s.title[1]} />}
+          {p.s.count && <Counter label={p.s.count[0]} to={p.s.count[1]} dur={p.dur} />}
+          {p.s.stamp && <Stamp text={p.s.stamp} />}
           {p.s.notif && <Notif from={p.s.notif[0]} text={p.s.notif[1]} />}
           {p.s.big && <BigLine text={p.s.big} dur={p.dur} />}
           {p.s.chip && <Chip text={p.s.chip} dur={p.dur} />}
           {p.s.sub && <Subtitle who={p.s.sub[0] || undefined} text={p.s.sub[1]} dur={p.dur} />}
+          {p.s.leak && <Leak seed={i * 7 + 3} />}
         </Sequence>
       ))}
       <Sequence from={0} durationInFrames={endFrom}>

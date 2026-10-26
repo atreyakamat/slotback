@@ -13,6 +13,12 @@ export type MovieScene = {
   big?: string;
   notif?: [from: string, text: string];
   chip?: string;
+  // Motion-graphics layers (see fx.tsx).
+  leak?: boolean;
+  stamp?: string;
+  title?: [kicker: string, text: string];
+  count?: [label: string, to: number];
+  split?: { b: string; fromB?: number; labels: [string, string]; win?: 0 | 1 };
 };
 
 // Atreya's songs live in public/music (gitignored). The bass drop at `drop`

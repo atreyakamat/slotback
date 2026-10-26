@@ -11,6 +11,7 @@ import { PoolReelProps, PoolReelVideo, poolDuration } from "./pool/PoolReelVideo
 import { poolReels } from "./pool/reels";
 import { MovieReelProps, MovieReelVideo, movieDuration } from "./movie/MovieReel";
 import { movieReels } from "./movie/reels";
+import { movieReels02 } from "./movie/reels-02";
 
 const handle = delayRender("Loading fonts");
 fontsLoaded.then(() => continueRender(handle));
@@ -70,7 +71,7 @@ export const RemotionRoot: React.FC = () => (
       calculateMetadata={({ props }) => ({ durationInFrames: poolDuration(props.reelId) })}
     />
     <Folder name="Movie">
-      {movieReels.map((r) => (
+      {[...movieReels, ...movieReels02].map((r) => (
         <Composition
           key={r.id}
           id={r.id}
