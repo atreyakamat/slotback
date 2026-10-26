@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:AB;src:url(archivo-black-latin-400-normal.woff2)}
+@font-face{font-family:IT;src:url(inter-tight-latin-700-normal.woff2);font-weight:700}
+@font-face{font-family:IT;src:url(inter-tight-latin-800-normal.woff2);font-weight:800}
+@font-face{font-family:IT;src:url(inter-tight-latin-500-normal.woff2);font-weight:500}
+:root{--ink:#07140F;--g:#0F2E22;--gl:#1A4434;--l:#C6F432;--c:#F5EFE1;--m:#8FA89B}
+*{box-sizing:border-box;margin:0}
+body{width:1080px;height:1920px;overflow:hidden;background:var(--g);color:var(--c);font-family:IT,sans-serif;position:relative}
+.glow{position:absolute;width:1200px;height:1200px;left:-60px;top:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(198,244,50,.16),rgba(198,244,50,0) 60%)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(245,239,225,.04) 2px,transparent 2px),linear-gradient(90deg,rgba(245,239,225,.04) 2px,transparent 2px);background-size:120px 120px}
+.safe{position:absolute;left:80px;right:80px;top:260px;bottom:360px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.pill{border:3px solid var(--l);color:var(--l);font-weight:800;font-size:32px;letter-spacing:.12em;padding:14px 30px;border-radius:999px}
+.logo{width:200px;height:200px;border-radius:50%;margin-top:44px;box-shadow:0 0 0 6px var(--g),0 0 0 12px var(--l)}
+.word{font-family:AB;font-size:84px;letter-spacing:-.03em;line-height:1;margin-top:30px}
+h1{font-family:AB;font-weight:400;font-size:86px;line-height:1.02;letter-spacing:-.035em;margin-top:54px;white-space:nowrap}
+h1 .l{color:var(--l)}
+.sub{font-weight:500;font-size:38px;line-height:1.3;color:var(--c);opacity:.85;margin-top:30px;max-width:860px}
+.steps{display:flex;gap:16px;margin-top:44px;width:100%}
+.step{flex:1;background:var(--gl);border-radius:28px;padding:26px 14px 24px;border:2px solid rgba(198,244,50,.25)}
+.step b{display:flex;margin:0 auto 14px;width:58px;height:58px;border-radius:50%;background:var(--l);color:var(--g);font-family:AB;font-size:30px;align-items:center;justify-content:center}
+.step span{font-weight:800;font-size:31px;line-height:1.15;display:block}
+.step:last-child{background:var(--l);color:var(--g)}
+.step:last-child b{background:var(--g);color:var(--l)}
+.cta{margin-top:auto;margin-bottom:10px;background:var(--l);color:var(--g);font-weight:800;font-size:44px;padding:28px 56px;border-radius:999px;box-shadow:0 0 60px rgba(198,244,50,.4)}
+.goa{margin-top:16px;font-weight:700;font-size:34px;color:var(--m)}
+body.guides:after{content:"";position:absolute;left:0;right:0;top:0;height:250px;background:rgba(255,0,0,.25);box-shadow:0 1670px 0 0 rgba(255,0,0,.25)}
+body.guides .safe{outline:3px dashed red}
+</style></head><body>
+<div class="grid"></div><div class="glow"></div>
+<div class="safe">
+  <div class="pill">NOW ON INSTAGRAM</div>
+  <img class="logo" id="logo" src="logo-B.svg">
+  <div class="word">Slot<span style="color:var(--l)">Back</span></div>
+  <div class="goa">For salons &amp; spas in Goa</div>
+  <h1>Cancelled slot?<br><span class="l">Filled in minutes.</span></h1>
+  <p class="sub">When a client cancels, your waitlist gets a claim link. First to tap gets the slot.</p>
+  <div class="steps">
+    <div class="step"><b>1</b><span>Client<br>cancels</span></div>
+    <div class="step"><b>2</b><span>Waitlist<br>gets a link</span></div>
+    <div class="step"><b>3</b><span>Slot<br>refilled</span></div>
+  </div>
+  <div class="cta">Follow for the launch →</div>
+</div>
+<script>
+const q=new URLSearchParams(location.search);
+if(q.get('logo'))document.getElementById('logo').src='logo-'+q.get('logo')+'.svg';
+if(q.has('guides'))document.body.classList.add('guides');
+</script>
+</body></html>

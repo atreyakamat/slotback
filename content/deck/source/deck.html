@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SlotBack Pitch Deck</title>
+<style>
+@font-face{font-family:"Archivo Black";src:url(../../brand/source/archivo-black-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:"Archivo Black";src:url(../../brand/source/archivo-black-latin-ext-400-normal.woff2) format("woff2");font-weight:400;unicode-range:U+0100-024F,U+20A0-20CF}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-500-normal.woff2) format("woff2");font-weight:500}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-ext-500-normal.woff2) format("woff2");font-weight:500;unicode-range:U+0100-024F,U+20A0-20CF}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-700-normal.woff2) format("woff2");font-weight:700}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-ext-700-normal.woff2) format("woff2");font-weight:700;unicode-range:U+0100-024F,U+20A0-20CF}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-800-normal.woff2) format("woff2");font-weight:800}
+@font-face{font-family:"Inter Tight";src:url(../../brand/source/inter-tight-latin-ext-800-normal.woff2) format("woff2");font-weight:800;unicode-range:U+0100-024F,U+20A0-20CF}
+/* Deck: 1920x1080 slides. Dark green = story beats, cream = evidence. */
+:root{--ink:#07140F;--green:#0F2E22;--green2:#1A4434;--lime:#C6F432;--cream:#F5EFE1;--muted:#8FA89B;--muted-c:#5B6E64;--line:#D6CCB4;--red:#E0563B;
+--d:"Archivo Black","Inter Tight",Arial,sans-serif;--b:"Inter Tight",Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:1920px 1080px;margin:0}
+body{background:#333;font-family:var(--b);font-weight:500}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;padding:110px 130px;display:flex;flex-direction:column;page-break-after:always;break-after:page}
+.dark{background:var(--green);color:var(--cream)}
+.ink{background:var(--ink);color:var(--cream)}
+.light{background:var(--cream);color:var(--ink)}
+h1,h2,h3{font-family:var(--d);font-weight:400;line-height:1;letter-spacing:-.01em}
+h2{font-size:92px;max-width:1450px}
+.kick{font-size:24px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;margin-bottom:34px;display:flex;gap:18px;align-items:center}
+.dark .kick,.ink .kick{color:var(--lime)}
+.light .kick{color:var(--muted-c)}
+.kick b{font-family:var(--d);font-weight:400;font-size:24px;letter-spacing:0}
+.lime{color:var(--lime)}
+.hl{background:var(--lime);color:var(--ink);padding:0 .14em}
+.foot{position:absolute;left:130px;right:130px;bottom:56px;display:flex;justify-content:space-between;font-size:20px;opacity:.7}
+.src{font-size:19px;opacity:.75;margin-top:auto}
+.lede{font-size:34px;line-height:1.35;max-width:1200px;margin-top:34px}
+.dark .lede,.ink .lede{color:#CFD9D2}
+.light .lede{color:var(--muted-c)}
+
+/* 1 title */
+.title{justify-content:center}
+.logo{display:flex;align-items:center;gap:28px;margin-bottom:70px}
+.logo img{width:120px;height:120px;border-radius:28px}
+.logo span{font-family:var(--d);font-size:56px}
+.title h1{font-size:132px;max-width:1660px}
+.title .lede{font-size:40px}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:70px;border-top:3px solid var(--ink)}
+.stat{padding:40px 40px 0 0;border-right:2px solid var(--line);padding-left:40px}
+.stat:first-child{padding-left:0}.stat:last-child{border-right:0}
+.stat .n{font-family:var(--d);font-size:150px;line-height:.9;color:var(--ink)}
+.stat .n.r{color:var(--red)}
+.stat p{font-size:30px;line-height:1.3;margin-top:22px;max-width:460px}
+
+/* moments */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:60px}
+.card{border:2px solid #2C5443;border-radius:24px;padding:36px 40px}
+.card .t{font-size:22px;color:var(--lime);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.card h3{font-size:44px;margin:14px 0 12px}
+.card p{font-size:26px;line-height:1.35;color:#CFD9D2}
+.callout{margin-top:auto;font-size:34px;line-height:1.3;border-left:8px solid var(--lime);padding-left:28px;max-width:1500px}
+
+/* solution */
+.sol{display:grid;grid-template-columns:1.15fr .85fr;gap:90px;flex:1;margin-top:10px}
+.steps{list-style:none;display:flex;flex-direction:column;margin-top:44px}
+.steps li{display:grid;grid-template-columns:130px 1fr;gap:20px;padding:24px 0;border-top:2px solid var(--green2);font-size:32px;line-height:1.3}
+.steps li span{font-family:var(--d);color:var(--lime);font-size:30px}
+.phone{align-self:center;justify-self:center;width:470px;background:#0B1A14;border-radius:56px;padding:22px;border:2px solid #2C5443}
+.pbar{display:flex;gap:16px;align-items:center;padding:12px 14px 20px;border-bottom:2px solid #1E3A2E}
+.ava{width:56px;height:56px;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center;font-family:var(--d);font-size:20px}
+.pbar b{font-size:26px}.pbar small{display:block;color:var(--muted);font-size:19px}
+.chat{display:flex;flex-direction:column;gap:16px;padding:22px 6px 10px}
+.msg{max-width:88%;padding:16px 20px;border-radius:22px;font-size:23px;line-height:1.35}
+.in{background:#16302A;border-top-left-radius:6px}
+.out{background:var(--lime);color:var(--ink);align-self:flex-end;font-weight:800;border-top-right-radius:6px}
+.claim{display:block;margin-top:14px;text-align:center;background:var(--lime);color:var(--ink);font-weight:800;border-radius:14px;padding:14px}
+.small{font-size:18px;color:var(--muted);text-align:center}
+
+/* value */
+.vals{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:70px}
+.val{background:#fff;border:2px solid var(--line);border-radius:24px;padding:40px 34px;display:flex;flex-direction:column;gap:18px}
+.val .i{font-family:var(--d);font-size:30px;width:64px;height:64px;border-radius:16px;background:var(--green);color:var(--lime);display:grid;place-items:center}
+.val h3{font-size:36px}
+.val p{font-size:25px;line-height:1.35;color:var(--muted-c)}
+.price{margin-top:56px;display:flex;gap:50px;align-items:baseline;border-top:3px solid var(--ink);padding-top:34px}
+.price .n{font-family:var(--d);font-size:84px}
+.price p{font-size:28px;color:var(--muted-c);max-width:900px}
+
+/* market */
+.mk{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:70px;border-top:2px solid #2C5443}
+.mk div{padding:40px 36px 0 0}
+.mk .n{font-family:var(--d);font-size:82px;white-space:nowrap;line-height:.95;color:var(--lime)}
+.mk p{font-size:27px;line-height:1.35;margin-top:20px;color:#CFD9D2;max-width:360px}
+
+/* gap table */
+table{width:100%;border-collapse:collapse;margin-top:54px;font-size:27px}
+th{text-align:left;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-c);padding:0 20px 18px 0;border-bottom:3px solid var(--ink)}
+td{padding:22px 20px 22px 0;border-bottom:2px solid var(--line);vertical-align:top;line-height:1.3}
+td:first-child{font-weight:800;width:300px}
+.y{font-weight:800;color:var(--green2)}.n2{font-weight:800;color:var(--red)}
+tr.us td{background:var(--lime);font-weight:800}
+tr.us td:first-child{padding-left:20px}
+
+/* niche */
+.niche{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:56px;flex:1}
+.bars{display:flex;flex-direction:column;gap:22px}
+.bar{display:grid;grid-template-columns:330px 1fr 70px;gap:20px;align-items:center;font-size:27px}
+.track{height:34px;background:#1E3A2E;border-radius:8px;overflow:hidden;display:flex}
+.track i{display:block;height:100%;background:var(--lime)}
+.track i.b{background:var(--muted)}
+.bar b{font-family:var(--d);font-weight:400;text-align:right}
+.why{list-style:none;display:flex;flex-direction:column;gap:0}
+.why li{font-size:29px;line-height:1.35;padding:20px 0;border-top:2px solid #2C5443}
+.why li b{color:var(--lime)}
+.legend{display:flex;gap:30px;font-size:21px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:20px;height:20px;border-radius:4px;margin-right:10px;vertical-align:-3px;background:var(--lime)}
+.legend span.b::before{background:var(--muted)}
+
+/* growth */
+.road{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:80px;position:relative}
+.road::before{content:"";position:absolute;left:0;right:0;top:44px;height:6px;background:var(--line)}
+.stage{position:relative;padding-right:40px}
+.dot{width:94px;height:94px;border-radius:50%;background:var(--cream);border:6px solid var(--ink);display:grid;place-items:center;font-family:var(--d);font-size:26px;position:relative}
+.stage.now .dot{background:var(--lime)}
+.stage .when{font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-c);font-weight:800;margin-top:34px}
+.stage .n{font-family:var(--d);font-size:80px;line-height:1;margin-top:12px}
+.stage .u{font-size:26px;font-weight:700;margin-top:6px}
+.stage p{font-size:25px;line-height:1.35;color:var(--muted-c);margin-top:18px}
+.stage .mrr{display:inline-block;margin-top:18px;background:var(--green);color:var(--lime);font-weight:800;font-size:24px;padding:8px 16px;border-radius:10px}
+
+/* gtm */
+.gtm{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:64px}
+.g{border:2px solid #2C5443;border-radius:24px;padding:40px;display:flex;flex-direction:column;gap:18px}
+.g .t{font-size:22px;letter-spacing:.12em;text-transform:uppercase;color:var(--lime);font-weight:800}
+.g h3{font-size:42px}
+.g p{font-size:26px;line-height:1.35;color:#CFD9D2}
+.gates{margin-top:auto;display:flex;gap:40px;font-size:27px;border-top:2px solid #2C5443;padding-top:30px;flex-wrap:wrap}
+.gates b{color:var(--lime)}
+</style>
+</head>
+<body>
+
+<!-- 1 INTRO -->
+<section class="slide ink title">
+  <div class="logo"><img src="../../brand/slotback-logo-1080.png" alt=""><span>SlotBack</span></div>
+  <h1>Cancelled at 11 pm.<br><span class="lime">Refilled by 9 am.</span></h1>
+  <p class="lede">SlotBack turns last-minute cancellations into booked appointments. It offers the open slot to a business's waiting list, and the first client to tap gets it.</p>
+  <div class="foot"><span>Pitch deck · October 2026 · Goa, India</span><span>Atreya, founder</span></div>
+</section>
+
+<!-- 2 PROBLEM -->
+<section class="slide light">
+  <div class="kick"><b>02</b> The problem</div>
+  <h2>Every empty chair costs an appointment business <span class="hl">twice.</span></h2>
+  <div class="stats">
+    <div class="stat"><div class="n">47%</div><p>of beauty and wellness businesses get short-notice cancellations or no-shows <b>every week</b>.</p></div>
+    <div class="stat"><div class="n r">62%</div><p>of clients who cancel give <b>under 24 hours' notice</b>, too late to refill by phone.</p></div>
+    <div class="stat"><div class="n">~7%</div><p>of monthly revenue lost on average. <b>1 in 7</b> businesses lose 11–20%.</p></div>
+  </div>
+  <p class="src">Source: Fresha, "The Hidden Cost of Cancellations", Dec 2025 (200+ businesses, 500 clients, UK). India has no published data yet; our Goa study is collecting it.</p>
+</section>
+
+<!-- 3 PROBLEM IN PRACTICE -->
+<section class="slide dark">
+  <div class="kick"><b>03</b> The problem, on the ground</div>
+  <h2>Today the refill is a receptionist and a phone.</h2>
+  <div class="grid2">
+    <div class="card"><div class="t">23:42 · The night-before text</div><h3>"Sorry, can't make it."</h3><p>Read the next morning, when the slot is already hard to sell.</p></div>
+    <div class="card"><div class="t">14:10 · The silent no-show</div><h3>Nobody comes. Nobody calls.</h3><p>A therapist waits, the hour is gone, and so is the client who wanted it.</p></div>
+    <div class="card"><div class="t">09:15 · The phone-around</div><h3>Six calls for one slot.</h3><p>Two don't answer, three can't come. Forty minutes of staff time, often for nothing.</p></div>
+    <div class="card"><div class="t">All week · The lost list</div><h3>"Tell me if anything opens."</h3><p>Clients ask to be squeezed in. Their names end up in a chat thread or nowhere.</p></div>
+  </div>
+</section>
+
+<!-- 4 SOLUTION -->
+<section class="slide ink">
+  <div class="kick"><b>04</b> The solution</div>
+  <div class="sol">
+    <div>
+      <h2 style="font-size:84px">One cancellation.<br>One message. <span class="lime">First tap wins.</span></h2>
+      <ol class="steps">
+        <li><span>09:02</span>Staff mark the 2 pm appointment as cancelled, in three taps.</li>
+        <li><span>09:03</span>SlotBack offers the slot on WhatsApp to waitlisted clients who said 2 pm works.</li>
+        <li><span>09:07</span>The first client to tap claims it. Everyone else sees it's taken. No double bookings.</li>
+        <li><span>09:07</span>The diary updates and the owner sees the revenue recovered.</li>
+      </ol>
+    </div>
+    <div class="phone">
+      <div class="pbar"><span class="ava">GC</span><div><b>Glow Clinic, Panjim</b><small>Waiting list</small></div></div>
+      <div class="chat">
+        <div class="msg in">Hi Riya! A slot just opened <b>today at 2:00 pm</b> for a Hydrafacial. The first person to claim it gets it.<span class="claim">Claim this slot</span></div>
+        <div class="msg out">Claim this slot</div>
+        <div class="msg in">You're booked! See you today at 2:00 pm.</div>
+        <div class="small">5 others notified · slot now taken</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 VALUE -->
+<section class="slide light">
+  <div class="kick"><b>05</b> What the owner gets</div>
+  <h2>Built for the way Goa businesses already work.</h2>
+  <div class="vals">
+    <div class="val"><span class="i">1</span><h3>No new app for clients</h3><p>Offers arrive as a WhatsApp message with one link. Claiming works in any phone browser.</p></div>
+    <div class="val"><span class="i">2</span><h3>Works beside any diary</h3><p>Paper register, WhatsApp or booking software. SlotBack only handles the refill.</p></div>
+    <div class="val"><span class="i">3</span><h3>Safe by design</h3><p>One winner per slot, expiring links, and only clients who opted in to the waiting list.</p></div>
+    <div class="val"><span class="i">4</span><h3>Proof in rupees</h3><p>A report of cancellations, refills and revenue recovered, so the owner sees what it earns.</p></div>
+  </div>
+  <div class="price"><span class="n">₹999<small style="font-size:36px">/mo</small></span><p>per location. Paid back by one or two recovered appointments a month. Pilots: free for 2 weeks, then paid only if it fills 3+ slots.</p></div>
+</section>
+
+<!-- 6 MARKET DEMAND -->
+<section class="slide dark">
+  <div class="kick"><b>06</b> Market demand</div>
+  <h2>A large, fragmented market that books on WhatsApp.</h2>
+  <div class="mk">
+    <div><div class="n">$28B</div><p>India's beauty and personal care market, growing <b>10–11% a year</b>.</p></div>
+    <div><div class="n">85–90%</div><p>of it sits outside branded chains, mostly with independent owners.</p></div>
+    <div><div class="n">1.89L</div><p>registered dentists in India, a fully pre-booked profession.</p></div>
+    <div><div class="n">$780K</div><p>recovered in 2024 by one global vendor's waitlist refill feature, from 18K refills.</p></div>
+  </div>
+  <p class="callout">The demand is proven abroad. Global tools built automatic refill because it pays. India's independents are the ones left without it.</p>
+  <p class="src" style="margin-top:28px">Sources: Franchise India (Sep 2026); CBHI dentist counts via India Data Map (Aug 2025; our sum of state figures); Zenoti waitlist management page.</p>
+</section>
+
+<!-- 7 THE GAP -->
+<section class="slide light">
+  <div class="kick"><b>07</b> The gap</div>
+  <h2>The feature exists. Not for Indian independents.</h2>
+  <table>
+    <thead><tr><th>Tool</th><th>Auto-refills from a waitlist</th><th>Who it's built for</th><th>Gap for Goa</th></tr></thead>
+    <tbody>
+      <tr><td>Zenoti</td><td class="y">Yes</td><td>Chains and enterprise</td><td>Too heavy and costly for a one-chair clinic</td></tr>
+      <tr><td>Fresha</td><td class="y">Yes</td><td>Salons on its marketplace</td><td>Clinics and physios don't use it; needs a full switch</td></tr>
+      <tr><td>Zylu, Dingg, Invoay</td><td class="n2">Not listed</td><td>Indian salon POS</td><td>Billing and reminders, no cancellation refill</td></tr>
+      <tr><td>Practo Ray</td><td class="n2">Not listed</td><td>Clinics</td><td>Records and scheduling, no refill</td></tr>
+      <tr class="us"><td>SlotBack</td><td>Yes, on WhatsApp</td><td>Independent pre-booked businesses</td><td>Works beside what they already use</td></tr>
+    </tbody>
+  </table>
+  <p class="src">Sources: vendor pages and Capterra India listings, checked 23 Oct 2026.</p>
+</section>
+
+<!-- 8 THE NICHE -->
+<section class="slide ink">
+  <div class="kick"><b>08</b> The niche</div>
+  <h2>Start where one slot is worth <span class="lime">₹1,000+</span>.</h2>
+  <div class="niche">
+    <div>
+      <div class="bars">
+        <div class="bar"><span>Skin &amp; aesthetic clinics</span><span class="track"><i style="width:83%"></i><i class="b" style="width:17%"></i></span><b>6</b></div>
+        <div class="bar"><span>Physiotherapy</span><span class="track"><i style="width:37.5%"></i><i class="b" style="width:62.5%"></i></span><b>8</b></div>
+        <div class="bar"><span>Nail &amp; beauty studios</span><span class="track"><i style="width:57%"></i><i class="b" style="width:43%"></i></span><b>7</b></div>
+        <div class="bar"><span>Dental clinics</span><span class="track"><i style="width:20%"></i><i class="b" style="width:80%"></i></span><b>10</b></div>
+        <div class="bar"><span>Salons &amp; spas</span><span class="track"><i style="width:14%"></i><i class="b" style="width:86%"></i></span><b>14</b></div>
+      </div>
+      <div class="legend"><span>Strong fit</span><span class="b">Other leads</span></div>
+      <p class="lede" style="font-size:28px;margin-top:30px">45 Goa businesses mapped from public listings in one day. 16 are strong fits.</p>
+    </div>
+    <ul class="why">
+      <li><b>Appointment-only.</b> No walk-ins to fill gaps for free.</li>
+      <li><b>High ticket.</b> Laser, Hydrafacial, rehab and dental sessions run ₹1,000–10,000.</li>
+      <li><b>Booked on WhatsApp.</b> No software to replace, nothing to integrate.</li>
+      <li><b>Not general salons first.</b> Panjim haircuts average ₹275–500 and walk-ins cover gaps.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 9 GROWTH -->
+<section class="slide light">
+  <div class="kick"><b>09</b> Growth plan</div>
+  <h2>From 0 to 500 locations, one city at a time.</h2>
+  <div class="road">
+    <div class="stage now"><div class="dot">0</div><div class="when">Now · Oct 2026</div><div class="n">0 → 10</div><div class="u">paying locations in Goa</div><p>Market study, concierge pilots, first case study. Product demo built.</p><span class="mrr">₹10K MRR</span></div>
+    <div class="stage"><div class="dot">1</div><div class="when">By Apr 2027</div><div class="n">50</div><div class="u">locations across Goa</div><p>Chains with 4–5 branches, referrals from pilot owners, local partners.</p><span class="mrr">₹50K MRR</span></div>
+    <div class="stage"><div class="dot">2</div><div class="when">By Oct 2027</div><div class="n">150</div><div class="u">in 3 cities</div><p>Pune, Bengaluru and Mumbai clinics, using the Goa playbook and case studies.</p><span class="mrr">₹1.5L MRR</span></div>
+    <div class="stage"><div class="dot">3</div><div class="when">2028</div><div class="n">500</div><div class="u">locations</div><p>Self-serve sign-up, partner channels, integrations with Indian booking tools.</p><span class="mrr">₹5L MRR · ₹60L ARR</span></div>
+  </div>
+  <p class="src">Targets, not results. Revenue assumes ₹999 per location per month.</p>
+</section>
+
+<!-- 10 HOW -->
+<section class="slide dark">
+  <div class="kick"><b>10</b> How we'll do it</div>
+  <h2>Listen first. Prove it in rupees. Then scale.</h2>
+  <div class="gtm">
+    <div class="g"><span class="t">Step 1 · Listen</span><h3>Goa market study</h3><p>Meet 30+ owners, measure their real cancellations, and share the findings report free with everyone who takes part.</p></div>
+    <div class="g"><span class="t">Step 2 · Prove</span><h3>Paid pilots</h3><p>Free 2-week setup. Paid only if it fills 3+ slots. Every pilot becomes a case study with recovered rupees.</p></div>
+    <div class="g"><span class="t">Step 3 · Scale</span><h3>Chains and referrals</h3><p>Multi-branch groups (5 sites in one deal), owner referrals, and partners who already serve clinics.</p></div>
+  </div>
+  <div class="gates"><span><b>Gate 1:</b> 3 paid pilots by day 30</span><span><b>Gate 2:</b> 10 paying by day 75</span><span><b>Stop signal:</b> fewer than 3 in 15 owners see 2+ cancellations a week</span></div>
+  <div class="foot"><span>SlotBack · Goa, India</span><span>Thank you</span></div>
+</section>
+
+</body>
+</html>

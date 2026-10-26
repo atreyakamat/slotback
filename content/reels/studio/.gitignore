@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+.env
+
+# Ignore the output video from Git but not videos you import into src/.
+out
+
+# Licensed songs are for local beat-sync previews only; never commit them.
+public/music
+
+# Stock clips are committed in content/reels/stock; this is a render-time copy.
+public/stock
