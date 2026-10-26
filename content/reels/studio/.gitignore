@@ -8,3 +8,6 @@ out
 
 # Licensed songs are for local beat-sync previews only; never commit them.
 public/music
+
+# Stock clips are committed in content/reels/stock; this is a render-time copy.
+public/stock

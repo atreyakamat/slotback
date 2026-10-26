@@ -64,19 +64,28 @@ const Clip: React.FC<{ s: MovieScene; dur: number }> = ({ s, dur }) => {
 // Movie-subtitle style: speaker label, words appear in order.
 const Subtitle: React.FC<{ who?: string; text: string; dur: number }> = ({ who, text, dur }) => {
   const frame = useCurrentFrame();
-  const words = text.split(" ");
-  const per = Math.max(2, Math.min(5, Math.floor((dur * 0.55) / words.length)));
+  // Tag each word as lime or not first, so a *marked phrase* spanning words stays lime.
+  let lit = false;
+  const words = text.split(" ").map((raw) => {
+    const starts = raw.startsWith("*");
+    const ends = raw.endsWith("*");
+    const on = lit || starts;
+    if (starts) lit = true;
+    if (ends) lit = false;
+    return { w: raw.replace(/\*/g, ""), on };
+  });
+  const per = Math.max(2, Math.min(3, Math.floor((dur * 0.3) / words.length)));
   return (
     <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: BAR + 70, paddingLeft: 70, paddingRight: 70 }}>
       {who && (
         <div style={{ opacity: inOut(frame, 0, 6), fontFamily: fonts.body, fontWeight: 800, fontSize: 30, letterSpacing: "0.18em", color: colors.lime, textTransform: "uppercase", marginBottom: 14 }}>{who}</div>
       )}
       <div style={{ textAlign: "center", fontFamily: fonts.body, fontWeight: 700, fontSize: 60, lineHeight: 1.18, color: colors.cream, textShadow: "0 3px 0 #000, 0 0 24px rgba(0,0,0,0.9)", textWrap: "balance" }}>
-        {words.map((w, i) => {
-          const o = inOut(frame, 3 + i * per, 5);
+        {words.map(({ w, on }, i) => {
+          const o = inOut(frame, 2 + i * per, 4);
           return (
-            <span key={i} style={{ opacity: o, display: "inline-block", translate: `0 ${(1 - o) * 18}px`, marginRight: "0.26em" }}>
-              <Marked text={w} />
+            <span key={i} style={{ opacity: o, display: "inline-block", translate: `0 ${(1 - o) * 18}px`, marginRight: "0.26em", color: on ? colors.lime : undefined }}>
+              {w}
             </span>
           );
         })}
