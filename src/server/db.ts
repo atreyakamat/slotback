@@ -9,9 +9,21 @@ function createClient() {
   });
 }
 
-const globalForPrisma = globalThis as unknown as { prisma?: ReturnType<typeof createClient> };
+type Client = ReturnType<typeof createClient>;
+
+const globalForPrisma = globalThis as unknown as { prisma?: Client };
+
+/** Created on first use, so `next build` can import this module without database settings. */
+function client(): Client {
+  if (!globalForPrisma.prisma) globalForPrisma.prisma = createClient();
+  return globalForPrisma.prisma;
+}
 
 /** Shared Prisma client. Reused across hot reloads in development. */
-export const db = globalForPrisma.prisma ?? createClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+export const db: Client = new Proxy({} as Client, {
+  get(_target, prop) {
+    const c = client();
+    const value = Reflect.get(c, prop, c);
+    return typeof value === "function" ? value.bind(c) : value;
+  },
+});
