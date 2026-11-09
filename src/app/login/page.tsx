@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Smile, Sparkles } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,12 +18,15 @@ export default function LoginPage() {
         <Card className="p-6">
           <h1 className="text-lg font-semibold">Welcome to SlotBack</h1>
           <p className="mt-1 text-sm text-muted">
-            Explore a fictional Goa salon with a week of bookings and a ready waitlist. Nothing you do here messages a
-            real person.
+            Explore a fictional Goa salon or dental clinic with a week of bookings and a ready waitlist. Nothing you do
+            here messages a real person.
           </p>
-          <form action={demoLogin} className="mt-6">
-            <Button type="submit" size="lg" className="w-full">
+          <form action={demoLogin} className="mt-6 grid gap-2">
+            <Button type="submit" size="lg" className="w-full" name="workspace" value="salon">
               <Sparkles /> Try the demo workspace
+            </Button>
+            <Button type="submit" size="lg" variant="secondary" className="w-full" name="workspace" value="clinic">
+              <Smile /> Try the dental clinic demo
             </Button>
           </form>
           <p className="mt-6 border-t pt-4 text-xs text-muted">

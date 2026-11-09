@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings } from "lucide-react";
+import { CalendarDays, LayoutDashboard, MessageCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
   { href: "/app", label: "Today", icon: LayoutDashboard },
+  { href: "/app/appointments", label: "Appointments", icon: CalendarDays },
+  { href: "/app/messages", label: "Messages", icon: MessageCircle },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
 

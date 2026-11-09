@@ -4,6 +4,14 @@
 
 India-first, piloting in Goa. Product scope lives in the PRD; this repository is the demo-ready MVP.
 
+## Appointment reminders (clinics)
+
+- **Public booking link** at `/book/{slug}`: patients pick a service, day and free time, and leave a WhatsApp number with consent.
+- **WhatsApp reminders** (default 24h and 2h before), moved out of quiet hours, with a one-tap confirm or cancel link (`/a/{token}`; only the token's hash is stored).
+- **No-show tracking**: staff record "came" or "no-show"; the overview shows the 30-day no-show rate and repeat no-shows are flagged.
+- **Cancellations feed recovery**: a cancellation with enough notice drafts a recovery campaign for the freed slot.
+- Delivery goes through the outbox and a provider adapter. Only a **mock** WhatsApp provider exists today.
+
 ## Stack
 
 | Layer | Choice |
@@ -63,11 +71,12 @@ These are enforced by the database, not only the UI:
 - **One winner per opening.** `claims.campaign_id` is unique, so a slot can be claimed by at most one customer even under concurrent requests.
 - **Claim tokens are never stored.** Only their SHA-256 hash is kept.
 - **Consent is per channel.** A revoked channel suppresses outreach on that channel.
+- **One delivery per message.** Workers lease outbox rows with `FOR UPDATE SKIP LOCKED`; consent and appointment status are re-checked at send time.
 - **Tenant isolation.** Every query is scoped through the data access layer (`src/server/auth/dal.ts`), using ids from the verified session only.
 
 ## Demo data
 
-The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji. All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Owners of the demo workspace can reset it from **Settings**.
+There are two fictional demo workspaces: "Casa Verde Salon" in Panaji and "Smile Studio Dental" in Margao (online booking at `/book/smile-studio-demo`). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Owners of the demo workspace can reset it from **Settings**.
 
 ## Deployment
 

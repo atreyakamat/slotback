@@ -9,6 +9,13 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  /** Shared secret the scheduled delivery job sends as a Bearer token. Unset disables the endpoint. */
+  CRON_SECRET: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z.string().min(32, "CRON_SECRET must be at least 32 characters").optional(),
+  ),
+  /** WhatsApp provider adapter. Only "mock" exists: it records messages without sending them. */
+  WHATSAPP_PROVIDER: z.enum(["mock"]).default("mock"),
 });
 
 export type Env = z.infer<typeof schema>;

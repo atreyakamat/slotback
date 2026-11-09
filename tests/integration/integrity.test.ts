@@ -76,7 +76,7 @@ describe.skipIf(!hasTestDb)("demo seed", () => {
     const second = await seedDemo(db, new Date("2026-10-23T04:00:00Z"));
 
     expect(second.organizationId).not.toBe(first.organizationId);
-    expect(await db.organization.count({ where: { isDemo: true } })).toBe(1);
+    expect(await db.organization.count({ where: { isDemo: true } })).toBe(2); // salon + dental clinic
     expect(await db.organization.findUnique({ where: { id: real.id } })).not.toBeNull();
 
     const waitlist = await db.waitlistEntry.count({ where: { locationId: second.locationId } });
@@ -86,6 +86,16 @@ describe.skipIf(!hasTestDb)("demo seed", () => {
   it("only uses the reserved fake phone range", async () => {
     const customers = await db.customer.findMany({ where: { location: { organization: { isDemo: true } } } });
     expect(customers.length).toBeGreaterThan(0);
-    for (const c of customers) expect(c.phone).toMatch(/^\+91 90000 000\d{2}$/);
+    for (const c of customers) expect(c.phone).toMatch(/^\+91 90000 00[01]\d{2}$/);
+  });
+
+  it("seeds a dental clinic with online booking, reminders, no-shows and a drafted refill", async () => {
+    const { clinic } = await seedDemo(db, new Date("2026-11-09T04:30:00Z"));
+    const location = await db.location.findUniqueOrThrow({ where: { id: clinic.locationId } });
+    expect(location).toMatchObject({ bookingSlug: "smile-studio-demo", bookingEnabled: true });
+    expect(await db.outboxMessage.count({ where: { locationId: location.id, status: "QUEUED" } })).toBeGreaterThan(0);
+    expect(await db.outboxMessage.count({ where: { locationId: location.id, status: "SENT" } })).toBeGreaterThan(0);
+    expect(await db.recoveryCampaign.count({ where: { locationId: location.id, status: "DRAFT" } })).toBe(1);
+    expect(await db.appointment.count({ where: { locationId: location.id, status: "NO_SHOW" } })).toBeGreaterThan(0);
   });
 });

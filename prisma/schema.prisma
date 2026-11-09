@@ -56,33 +56,42 @@ model Membership {
 }
 
 model Location {
-  id                 String       @id @default(cuid())
-  organizationId     String       @map("organization_id")
-  name               String
-  address            String?
-  phone              String?
-  timezone           String       @default("Asia/Kolkata")
-  currency           String       @default("INR")
+  id                     String             @id @default(cuid())
+  organizationId         String             @map("organization_id")
+  name                   String
+  address                String?
+  phone                  String?
+  timezone               String             @default("Asia/Kolkata")
+  currency               String             @default("INR")
   /// Weekly opening hours: { "0": [{ "open": "10:00", "close": "20:00" }], ... } keyed by weekday (0 = Sunday).
-  businessHours      Json         @map("business_hours")
+  businessHours          Json               @map("business_hours")
   /// Minimum notice before a slot starts for it to be offered.
-  minLeadMinutes     Int          @default(60) @map("min_lead_minutes")
+  minLeadMinutes         Int                @default(60) @map("min_lead_minutes")
   /// How long an offer link stays claimable.
-  offerTtlMinutes    Int          @default(30) @map("offer_ttl_minutes")
+  offerTtlMinutes        Int                @default(30) @map("offer_ttl_minutes")
   /// Customers contacted per campaign launch.
-  offerBatchSize     Int          @default(5) @map("offer_batch_size")
+  offerBatchSize         Int                @default(5) @map("offer_batch_size")
   /// No customer messages between these local times ("HH:mm").
-  quietHoursStart    String       @default("21:00") @map("quiet_hours_start")
-  quietHoursEnd      String       @default("09:00") @map("quiet_hours_end")
-  createdAt          DateTime     @default(now()) @map("created_at")
-  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  services           Service[]
-  resources          Resource[]
-  customers          Customer[]
-  appointments       Appointment[]
-  waitlistEntries    WaitlistEntry[]
-  campaigns          RecoveryCampaign[]
-  outboxMessages     OutboxMessage[]
+  quietHoursStart        String             @default("21:00") @map("quiet_hours_start")
+  quietHoursEnd          String             @default("09:00") @map("quiet_hours_end")
+  /// Public booking link path segment: /book/{bookingSlug}.
+  bookingSlug            String?            @unique @map("booking_slug")
+  bookingEnabled         Boolean            @default(false) @map("booking_enabled")
+  /// How far ahead patients can book online.
+  bookingHorizonDays     Int                @default(14) @map("booking_horizon_days")
+  /// Granularity of start times offered online.
+  slotIntervalMinutes    Int                @default(15) @map("slot_interval_minutes")
+  /// Appointment reminders, in minutes before the start time. Default: 24h and 2h.
+  reminderOffsetsMinutes Int[]              @default([1440, 120]) @map("reminder_offsets_minutes")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services               Service[]
+  resources              Resource[]
+  customers              Customer[]
+  appointments           Appointment[]
+  waitlistEntries        WaitlistEntry[]
+  campaigns              RecoveryCampaign[]
+  outboxMessages         OutboxMessage[]
 
   @@index([organizationId])
   @@map("locations")
@@ -191,6 +200,7 @@ enum AppointmentStatus {
 enum AppointmentSource {
   DIRECT
   RECOVERY
+  ONLINE
 }
 
 /// Overlap protection: a Postgres exclusion constraint (see migrations) rejects two
@@ -209,6 +219,11 @@ model Appointment {
   cancelReason     String?           @map("cancel_reason")
   cancelledAt      DateTime?         @map("cancelled_at")
   completedAt      DateTime?         @map("completed_at")
+  /// Set when the customer (via their link) or staff confirm attendance.
+  confirmedAt      DateTime?         @map("confirmed_at")
+  noShowAt         DateTime?         @map("no_show_at")
+  /// SHA-256 of the customer's manage-booking token. The raw token only exists in the link.
+  manageTokenHash  String?           @unique @map("manage_token_hash")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
   location         Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
@@ -219,8 +234,10 @@ model Appointment {
   recoveryCampaign RecoveryCampaign? @relation("CampaignOrigin")
   /// Set when this appointment was booked by claiming a recovery offer.
   claim            Claim?
+  messages         OutboxMessage[]
 
   @@index([locationId, startAt])
+  @@index([customerId, status])
   @@index([resourceId, startAt])
   @@map("appointments")
 }
@@ -234,24 +251,24 @@ enum WaitlistStatus {
 }
 
 model WaitlistEntry {
-  id              String         @id @default(cuid())
-  locationId      String         @map("location_id")
-  customerId      String         @map("customer_id")
+  id             String         @id @default(cuid())
+  locationId     String         @map("location_id")
+  customerId     String         @map("customer_id")
   /// Null means "any service".
-  serviceId       String?        @map("service_id")
+  serviceId      String?        @map("service_id")
   /// Acceptable weekdays, 0 = Sunday. Empty means any day.
-  preferredDays   Int[]          @map("preferred_days")
+  preferredDays  Int[]          @map("preferred_days")
   /// Acceptable local time window, in minutes after midnight.
-  earliestMinute  Int            @default(0) @map("earliest_minute")
-  latestMinute    Int            @default(1440) @map("latest_minute")
-  status          WaitlistStatus @default(ACTIVE)
-  notes           String?
-  expiresAt       DateTime?      @map("expires_at")
-  createdAt       DateTime       @default(now()) @map("created_at")
-  location        Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  customer        Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  service         Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  offers          Offer[]
+  earliestMinute Int            @default(0) @map("earliest_minute")
+  latestMinute   Int            @default(1440) @map("latest_minute")
+  status         WaitlistStatus @default(ACTIVE)
+  notes          String?
+  expiresAt      DateTime?      @map("expires_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  location       Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  customer       Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service        Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  offers         Offer[]
 
   @@index([locationId, status])
   @@map("waitlist_entries")
@@ -269,28 +286,28 @@ enum CampaignStatus {
 
 /// One campaign per cancelled appointment. Snapshot fields describe the open slot.
 model RecoveryCampaign {
-  id             String         @id @default(cuid())
-  locationId     String         @map("location_id")
-  appointmentId  String         @unique @map("appointment_id")
-  serviceId      String         @map("service_id")
-  resourceId     String         @map("resource_id")
-  startAt        DateTime       @map("start_at")
-  endAt          DateTime       @map("end_at")
-  valuePaise     Int            @map("value_paise")
-  status         CampaignStatus @default(DRAFT)
+  id            String         @id @default(cuid())
+  locationId    String         @map("location_id")
+  appointmentId String         @unique @map("appointment_id")
+  serviceId     String         @map("service_id")
+  resourceId    String         @map("resource_id")
+  startAt       DateTime       @map("start_at")
+  endAt         DateTime       @map("end_at")
+  valuePaise    Int            @map("value_paise")
+  status        CampaignStatus @default(DRAFT)
   /// Eligibility rules in force at launch, for auditability.
-  rulesSnapshot  Json           @map("rules_snapshot")
-  expiresAt      DateTime?      @map("expires_at")
-  launchedAt     DateTime?      @map("launched_at")
-  claimedAt      DateTime?      @map("claimed_at")
-  createdById    String?        @map("created_by_id")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  location       Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  appointment    Appointment    @relation("CampaignOrigin", fields: [appointmentId], references: [id])
-  service        Service        @relation(fields: [serviceId], references: [id])
-  resource       Resource       @relation(fields: [resourceId], references: [id])
-  offers         Offer[]
-  claim          Claim?
+  rulesSnapshot Json           @map("rules_snapshot")
+  expiresAt     DateTime?      @map("expires_at")
+  launchedAt    DateTime?      @map("launched_at")
+  claimedAt     DateTime?      @map("claimed_at")
+  createdById   String?        @map("created_by_id")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  location      Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  appointment   Appointment    @relation("CampaignOrigin", fields: [appointmentId], references: [id])
+  service       Service        @relation(fields: [serviceId], references: [id])
+  resource      Resource       @relation(fields: [resourceId], references: [id])
+  offers        Offer[]
+  claim         Claim?
 
   @@index([locationId, status])
   @@map("recovery_campaigns")
@@ -357,30 +374,47 @@ enum MessageStatus {
   SENT
   DELIVERED
   FAILED
+  /// Withdrawn before sending, e.g. the appointment was cancelled.
+  CANCELLED
+  /// Not sent because consent was missing or revoked at send time.
+  SUPPRESSED
+}
+
+enum MessagePurpose {
+  OFFER
+  BOOKING_CONFIRMATION
+  APPOINTMENT_REMINDER
 }
 
 /// Durable outbox. Rows are written in the same transaction as the state change that
 /// causes them, then delivered by a worker through the configured provider adapter.
 model OutboxMessage {
-  id                String        @id @default(cuid())
-  locationId        String        @map("location_id")
-  offerId           String?       @map("offer_id")
+  id                String         @id @default(cuid())
+  locationId        String         @map("location_id")
+  offerId           String?        @map("offer_id")
+  appointmentId     String?        @map("appointment_id")
+  purpose           MessagePurpose @default(OFFER)
   channel           Channel
   provider          String
-  toAddress         String        @map("to_address")
+  toAddress         String         @map("to_address")
   body              String
-  status            MessageStatus @default(QUEUED)
-  attempts          Int           @default(0)
-  nextAttemptAt     DateTime      @default(now()) @map("next_attempt_at")
-  providerMessageId String?       @map("provider_message_id")
-  errorCode         String?       @map("error_code")
-  idempotencyKey    String        @unique @map("idempotency_key")
-  sentAt            DateTime?     @map("sent_at")
-  createdAt         DateTime      @default(now()) @map("created_at")
-  location          Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  offer             Offer?        @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  status            MessageStatus  @default(QUEUED)
+  attempts          Int            @default(0)
+  nextAttemptAt     DateTime       @default(now()) @map("next_attempt_at")
+  /// Delivery lease: a worker owns the row until this time, so two workers never send it twice.
+  lockedUntil       DateTime?      @map("locked_until")
+  providerMessageId String?        @map("provider_message_id")
+  errorCode         String?        @map("error_code")
+  idempotencyKey    String         @unique @map("idempotency_key")
+  sentAt            DateTime?      @map("sent_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  location          Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  offer             Offer?         @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  appointment       Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
+  @@index([appointmentId])
+  @@index([locationId, createdAt])
   @@map("outbox_messages")
 }
 
