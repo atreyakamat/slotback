@@ -13,6 +13,7 @@ India-first, piloting in Goa. Product scope lives in the PRD; this repository is
 - **Claim page** (`/c/…`): what a customer sees from WhatsApp/SMS, first to confirm wins
 - **Waitlist**: per-channel consent, preferred days and times
 - **Analytics**: recovered vs completed revenue, daily chart, funnel, CSV export
+- **Appointment reminders (clinics)**: public booking link (`/book/{slug}`), WhatsApp confirmation and reminders (default 24h and 2h before, outside quiet hours) with a one-tap confirm/cancel link (`/a/{token}`), a **Reminders** board (`/app/reminders`) for unconfirmed patients and no-shows, and a message log. Messages go through the same outbox, providers and every-minute `tick` job as recovery offers, and booking settings live under **Settings → Booking & reminders**. A cancellation with enough notice opens a draft recovery campaign
 - **Settings**: business rules (lead time, offer window, quiet hours), services, staff, activity log, demo reset
 
 To present it, follow [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
@@ -79,11 +80,12 @@ These are enforced by the database, not only the UI:
 - **One winner per opening.** `claims.campaign_id` is unique, so a slot can be claimed by at most one customer even under concurrent requests.
 - **Claim tokens are never stored.** Only their SHA-256 hash is kept.
 - **Consent is per channel.** A revoked channel suppresses outreach on that channel.
+- **One delivery per message.** Workers lease outbox rows with `FOR UPDATE SKIP LOCKED`; consent and appointment status are re-checked at send time.
 - **Tenant isolation.** Every query is scoped through the data access layer (`src/server/auth/dal.ts`), using ids from the verified session only.
 
 ## Demo data
 
-The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji, with a month of bookings and recovery history so the dashboard opens with believable numbers (around a 50% fill rate). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Demo workspaces always use the simulated message provider, so nothing reaches a real phone. Owners can reset it from **Settings**.
+The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji, with a month of bookings and recovery history so the dashboard opens with believable numbers (around a 50% fill rate). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Demo workspaces always use the simulated message provider, so nothing reaches a real phone. A second demo, "Smile Studio Dental" in Margao, shows clinic reminders and online booking at `/book/smile-studio-demo` (log in with **Try the dental clinic demo**). Owners can reset the demos from **Settings**.
 
 ## Known limits (by design, for now)
 

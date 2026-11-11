@@ -100,6 +100,10 @@ export async function setConsent(
         where: { status: "QUEUED", channel: input.channel, offer: { customerId: customer.id } },
         data: { status: "FAILED", errorCode: "opted_out" },
       });
+      await tx.outboxMessage.updateMany({
+        where: { status: "QUEUED", channel: input.channel, appointment: { customerId: customer.id } },
+        data: { status: "SUPPRESSED", errorCode: "opted_out" },
+      });
       await tx.offer.updateMany({
         where: { customerId: customer.id, channel: input.channel, status: { in: ["QUEUED", "SENT", "DELIVERED", "OPENED"] } },
         data: { status: "SUPPRESSED" },

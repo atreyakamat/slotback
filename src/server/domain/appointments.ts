@@ -124,7 +124,13 @@ export async function rescheduleAppointment(db: Db, actor: Actor, input: Resched
 
       const updated = await tx.appointment.update({
         where: { id: current.id },
-        data: { resourceId: input.resourceId, startAt: input.startAt, endAt },
+        // A confirmation was for the old time, so the patient is asked again.
+        data: { resourceId: input.resourceId, startAt: input.startAt, endAt, confirmedAt: null },
+      });
+      // Queued reminders name the old time. Withdraw them; staff tell the patient about the move.
+      await tx.outboxMessage.updateMany({
+        where: { appointmentId: current.id, status: "QUEUED", purpose: "APPOINTMENT_REMINDER" },
+        data: { status: "CANCELLED", errorCode: "appointment_moved" },
       });
       await closeCampaignsForBookedTime(tx, actor, input.resourceId, input.startAt, endAt);
       await recordAudit(tx, {
@@ -173,9 +179,16 @@ export async function changeAppointmentStatus(
         cancelledAt: input.to === "CANCELLED" ? now : undefined,
         cancelReason: input.to === "CANCELLED" ? (input.reason?.trim() || null) : undefined,
         completedAt: input.to === "COMPLETED" ? now : input.to === "NO_SHOW" ? null : undefined,
+        noShowAt: input.to === "NO_SHOW" ? now : input.to === "COMPLETED" ? null : undefined,
       },
     });
     if (count === 0) throw new DomainError("conflict", "This appointment was just changed by someone else. Refresh and try again.");
+
+    // Reminders and confirmations only make sense while the appointment is still booked.
+    await tx.outboxMessage.updateMany({
+      where: { appointmentId: current.id, status: "QUEUED" },
+      data: { status: "CANCELLED", errorCode: input.to === "CANCELLED" ? "appointment_cancelled" : "appointment_finished" },
+    });
 
     await recordAudit(tx, {
       organizationId: actor.organizationId,

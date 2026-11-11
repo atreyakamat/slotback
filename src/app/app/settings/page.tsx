@@ -67,7 +67,7 @@ async function General() {
             <div>
               <CardTitle>Reset demo</CardTitle>
               <CardDescription className="mt-1">
-                Restore the fictional salon to a fresh week of bookings and waitlist, timed from now.
+                Restore the demo salon and dental clinic to a fresh week of bookings, reminders and waitlist, timed from now.
               </CardDescription>
             </div>
           </CardHeader>

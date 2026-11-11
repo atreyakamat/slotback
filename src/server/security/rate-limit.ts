@@ -11,6 +11,7 @@ export const LIMITS = {
   signInPerEmail: { limit: 5, windowMs: 15 * MINUTE },
   signUpPerIp: { limit: 10, windowMs: 60 * MINUTE },
   claimPerIp: { limit: 30, windowMs: 10 * MINUTE },
+  bookPerIp: { limit: 10, windowMs: 60 * MINUTE },
   pairPerIp: { limit: 10, windowMs: 15 * MINUTE },
   demoDevicePerIp: { limit: 20, windowMs: 60 * MINUTE },
 } satisfies Record<string, Limit>;

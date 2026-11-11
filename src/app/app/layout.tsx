@@ -22,7 +22,7 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
       </aside>
 
       <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-surface/90 px-4 backdrop-blur lg:hidden">
-        <Link href="/app">
+        <Link href="/app" className="shrink-0">
           <Logo />
         </Link>
         <Suspense fallback={<NavLinksFallback orientation="horizontal" />}>

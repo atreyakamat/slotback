@@ -6,11 +6,12 @@ import { env } from "../env";
 import { createSession, destroySession } from "../auth/session";
 import { demoSessionTarget } from "../demo/target";
 
-/** One-click login into the fictional demo workspace. Creates it on first use. */
-export async function demoLogin() {
+/** One-click login into a fictional demo workspace: the salon by default, or the dental clinic. Creates them on first use. */
+export async function demoLogin(formData?: FormData) {
   if (!env().DEMO_MODE) redirect("/login?error=demo-disabled");
+  const workspace = formData?.get("workspace") === "clinic" ? "clinic" : "salon";
 
-  const session = await demoSessionTarget(db);
+  const session = await demoSessionTarget(db, workspace);
   await createSession(session);
   redirect("/app");
 }

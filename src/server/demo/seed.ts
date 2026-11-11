@@ -8,6 +8,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
 import { addDays, localDateKey, zonedToUtc } from "@/lib/time";
+import { seedDemoClinic, type ClinicSeedResult } from "./clinic";
 
 export const DEMO_USER_EMAIL = "demo@slotback.app";
 const TZ = "Asia/Kolkata";
@@ -53,10 +54,13 @@ function mulberry32(seed: number) {
   };
 }
 
-export type SeedResult = { organizationId: string; locationId: string; userId: string };
+export type SeedResult = { organizationId: string; locationId: string; userId: string; clinic: ClinicSeedResult };
+
+export type DemoWorkspace = "salon" | "clinic";
 
 /**
- * Deletes any existing demo organization and recreates it, anchored to `now`.
+ * Deletes any existing demo organizations and recreates the salon and the dental clinic
+ * (see ./clinic.ts), anchored to `now`.
  * Real (non-demo) organizations are never touched.
  */
 export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promise<SeedResult> {
@@ -96,6 +100,7 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
     include: { locations: true },
   });
   const location = org.locations[0];
+  await db.location.update({ where: { id: location.id }, data: { bookingSlug: "casa-verde-demo", bookingEnabled: true } });
 
   const services = new Map<ServiceKey, { id: string; durationMinutes: number; pricePaise: number }>();
   for (const s of SERVICES) {
@@ -235,7 +240,9 @@ export async function seedDemo(db: PrismaClient, now: Date = new Date()): Promis
     },
   });
 
-  return { organizationId: org.id, locationId: location.id, userId: user.id };
+  const clinic = await seedDemoClinic(db, user.id, now);
+
+  return { organizationId: org.id, locationId: location.id, userId: user.id, clinic };
 }
 
 type HistoryInput = {

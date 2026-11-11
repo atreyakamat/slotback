@@ -1,11 +1,11 @@
 # WhatsApp (Meta Cloud API)
 
-SlotBack sends offers and booking confirmations from one WhatsApp Business number, through Meta's Cloud API directly (no reseller). Demo workspaces never use it.
+SlotBack sends offers, booking confirmations and appointment reminders from one WhatsApp Business number, through Meta's Cloud API directly (no reseller). Demo workspaces never use it.
 
 ## How it works
 
-- Messages a business starts must use a template Meta has approved. SlotBack sends two: `slot_opening` and `slot_booked`.
-- The claim link is a URL button whose last part is the one-time token. After sending, SlotBack deletes the token from the stored message.
+- Messages a business starts must use a template Meta has approved. SlotBack sends four: `slot_opening` and `slot_booked` (recovery), and `appointment_booked` and `appointment_reminder` (clinic reminders).
+- The claim link and the patient's manage link are URL buttons whose last part is the token. After sending, SlotBack deletes the token from the stored message.
 - Clients who only agreed to SMS aren't offered slots while WhatsApp is the only provider. Staff see the reason "Only agreed to a channel that isn't set up yet".
 - Meta calls `/api/webhooks/whatsapp` with delivery receipts and replies. A reply of STOP (or "unsubscribe", "opt out", "cancel") removes WhatsApp consent for that number at every business, because the client can't tell which business sent it.
 
@@ -26,6 +26,17 @@ SlotBack sends offers and booking confirmations from one WhatsApp Business numbe
    `slot_booked`
    - Body: `You're booked, {{1}}! {{2}} at {{3}}, {{4}}. Address: {{5}}. To change it, please contact the business directly.`
    - Samples: `Asha`, `Haircut with Riya`, `Casa Verde Salon`, `Sat, 24 Oct at 3:00 pm`, `12 Rua de Ourém, Panaji`
+
+   `appointment_booked` (sent when a patient books from the public booking link)
+   - Body: `Hi {{1}}, your {{2}} at {{3}} is booked for {{4}}. Tap below to confirm or cancel.`
+   - Button: *Visit website*, text `Manage booking`, URL type **Dynamic**: `https://slotback.atreyakamat.dev/a/{{1}}`
+   - Samples: `Asha`, `Consultation`, `Smile Studio Dental`, `tomorrow at 10:30 am`, button `abc123`
+
+   `appointment_reminder` (sent 24 hours and 2 hours before, by default)
+   - Body: `Hi {{1}}, a reminder of your {{2}} at {{3}} {{4}}. Tap below to confirm, or cancel so someone else can have the slot.`
+   - Footer: `Reply STOP to opt out`
+   - Button: *Visit website*, text `Confirm or cancel`, URL type **Dynamic**: `https://slotback.atreyakamat.dev/a/{{1}}`
+   - Samples: `Asha`, `Consultation`, `Smile Studio Dental`, `tomorrow at 10:30 am`, button `abc123`
 
    Meta decides the final category. If it moves a template to Marketing, those messages cost more.
 6. **Webhook**: App → WhatsApp → Configuration → Callback URL `https://slotback.atreyakamat.dev/api/webhooks/whatsapp`, Verify token = your `WHATSAPP_VERIFY_TOKEN`. Subscribe to the **messages** field. Deploy with the variables below first, or verification fails.

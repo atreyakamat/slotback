@@ -32,7 +32,7 @@ SlotBack uses Supabase as plain Postgres for now. No Supabase API keys are neede
 
 3. Trigger a deploy. Production deploys run `prisma migrate deploy` before building, so the schema is created on the first deploy.
 4. Open `/api/health`. It should return `{"status":"ok"}`.
-5. Open `/login` and click **Try the demo workspace**. The demo salon is created on first use.
+5. Open `/login` and click **Try the demo workspace** (salon) or **Try the dental clinic demo**. Both demos are created on first use.
 6. **Logs → Functions → `tick`** should show a run every minute with no warnings. If it says `CRON_SECRET not set`, add the variable and redeploy.
 
 ### Email sign-in (Supabase Auth)
@@ -43,6 +43,10 @@ Businesses sign up and sign in with a link emailed through Supabase Auth. SlotBa
 2. Supabase → **Authentication → Providers → Email**: keep it enabled. Passwords aren't used.
 3. Supabase's built-in email sender has a small hourly limit meant for testing. Before inviting real businesses, add a custom SMTP sender under **Authentication → Emails → SMTP settings** (a paid or free-tier email service; needs approval).
 4. The link must be opened in the same browser that asked for it. Test it: sign up at `/signup` with your own email, click the link, and finish the setup steps.
+
+### Appointment reminders
+
+Booking confirmations and appointment reminders go into the same outbox as recovery offers and are delivered by the every-minute `tick` job. At send time each one is re-checked: the appointment must still be booked and more than 15 minutes away, the patient must still have WhatsApp consent, and nothing goes out during quiet hours. With `MESSAGE_PROVIDER=whatsapp_cloud`, two more approved templates are needed: see [WHATSAPP_SETUP.md](WHATSAPP_SETUP.md).
 
 ## Go-live checklist
 
