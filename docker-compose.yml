@@ -1,0 +1,61 @@
+# Local demo: the app, its own Postgres, and the every-minute job. Nothing leaves your machine.
+#   docker compose up --build      then open http://localhost:3000
+# Full guide: docs/DOCKER_DEMO.md
+
+x-app-url: &app-url ${APP_URL:-http://localhost:3000}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: slotback
+      POSTGRES_PASSWORD: slotback
+      POSTGRES_DB: slotback
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slotback -d slotback"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: *app-url
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://slotback:slotback@db:5432/slotback
+      DIRECT_URL: postgresql://slotback:slotback@db:5432/slotback
+      NEXT_PUBLIC_APP_URL: *app-url
+      # Local demo values only. Never reuse them on a real deployment.
+      SESSION_SECRET: ${SESSION_SECRET:-local-docker-demo-only-not-a-real-secret}
+      CRON_SECRET: ${CRON_SECRET:-local-docker-demo-cron}
+      DEMO_MODE: "true"
+      MESSAGE_PROVIDER: demo
+      # Sign-up links appear on screen instead of being emailed (only allowed on localhost).
+      AUTH_EMAIL_PROVIDER: ${AUTH_EMAIL_PROVIDER:-dev-insecure}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # Does what Netlify's scheduled function does: expires offers and sends queued messages every minute.
+  ticker:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      CRON_SECRET: ${CRON_SECRET:-local-docker-demo-cron}
+    entrypoint: ["sh", "-c", "while true; do curl -fsS -X POST -H \"authorization: Bearer $$CRON_SECRET\" http://app:3000/api/cron/tick > /dev/null || echo 'tick failed'; sleep 60; done"]
+
+volumes:
+  db-data:

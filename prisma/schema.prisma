@@ -20,22 +20,32 @@ enum Role {
 }
 
 model User {
-  id          String       @id @default(cuid())
-  email       String       @unique
-  name        String
-  createdAt   DateTime     @default(now()) @map("created_at")
-  memberships Membership[]
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String
+  /// Bumped to sign the user out of every browser: web sessions carry the version they were issued with.
+  sessionVersion Int             @default(0) @map("session_version")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  memberships    Membership[]
+  devices        DeviceSession[]
 
   @@map("users")
 }
 
 model Organization {
-  id          String       @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
-  plan        String       @default("pilot")
-  isDemo      Boolean      @default(false) @map("is_demo")
-  createdAt   DateTime     @default(now()) @map("created_at")
+  plan        String          @default("pilot")
+  isDemo      Boolean         @default(false) @map("is_demo")
+  /// Business type chosen at sign-up, e.g. "salon"; drives suggested services during onboarding.
+  vertical    String?
+  city        String?
+  /// Set when the owner finishes the setup wizard. Null sends owners to /onboarding.
+  onboardedAt DateTime?       @map("onboarded_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
   memberships Membership[]
+  invites     Invite[]
+  devices     DeviceSession[]
   locations   Location[]
   auditEvents AuditEvent[]
 
@@ -53,6 +63,49 @@ model Membership {
 
   @@unique([userId, organizationId])
   @@map("memberships")
+}
+
+/// A phone signed in to the staff app. It starts as a pairing code shown as a QR in a signed-in
+/// browser (10 minutes, one use), then becomes a long-lived device token. Only hashes are stored.
+model DeviceSession {
+  id             String       @id @default(cuid())
+  userId         String       @map("user_id")
+  organizationId String       @map("organization_id")
+  locationId     String       @map("location_id")
+  pairHash       String?      @unique @map("pair_hash")
+  pairExpiresAt  DateTime?    @map("pair_expires_at")
+  tokenHash      String?      @unique @map("token_hash")
+  deviceName     String?      @map("device_name")
+  pairedAt       DateTime?    @map("paired_at")
+  lastUsedAt     DateTime?    @map("last_used_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("device_sessions")
+}
+
+/// A pending invitation to join a business. The link carries a random token; only its hash
+/// is stored. Accepting needs a sign-in link sent to this exact email, so a forwarded link is useless.
+model Invite {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  email          String
+  name           String
+  role           Role         @default(STAFF)
+  tokenHash      String       @unique @map("token_hash")
+  invitedById    String       @map("invited_by_id")
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime?    @map("accepted_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([organizationId])
+  @@map("invites")
 }
 
 model Location {
@@ -74,6 +127,12 @@ model Location {
   /// No customer messages between these local times ("HH:mm").
   quietHoursStart        String             @default("21:00") @map("quiet_hours_start")
   quietHoursEnd          String             @default("09:00") @map("quiet_hours_end")
+  /// When a round closes unclaimed, offer the slot to the next people in line without staff action.
+  autoNextRound          Boolean            @default(true) @map("auto_next_round")
+  /// Most rounds a campaign sends, counting the first one staff start.
+  maxRounds              Int                @default(3) @map("max_rounds")
+  /// Public code in the waitlist self-join link (/join/<code>). Created when first shared; rotating it retires old QR posters.
+  joinCode               String?            @unique @map("join_code")
   /// Public booking link path segment: /book/{bookingSlug}.
   bookingSlug            String?            @unique @map("booking_slug")
   bookingEnabled         Boolean            @default(false) @map("booking_enabled")
@@ -92,6 +151,7 @@ model Location {
   waitlistEntries        WaitlistEntry[]
   campaigns              RecoveryCampaign[]
   outboxMessages         OutboxMessage[]
+  integrations           Integration[]
 
   @@index([organizationId])
   @@map("locations")
@@ -235,7 +295,12 @@ model Appointment {
   /// Set when this appointment was booked by claiming a recovery offer.
   claim            Claim?
   messages         OutboxMessage[]
+  /// For bookings synced from another scheduler: which connection sent it, and its id there.
+  integrationId    String?           @map("integration_id")
+  externalId       String?           @map("external_id")
+  integration      Integration?      @relation(fields: [integrationId], references: [id], onDelete: SetNull)
 
+  @@unique([integrationId, externalId])
   @@index([locationId, startAt])
   @@index([customerId, status])
   @@index([resourceId, startAt])
@@ -295,6 +360,7 @@ model RecoveryCampaign {
   endAt         DateTime       @map("end_at")
   valuePaise    Int            @map("value_paise")
   status        CampaignStatus @default(DRAFT)
+  roundsSent    Int            @default(0) @map("rounds_sent")
   /// Eligibility rules in force at launch, for auditability.
   rulesSnapshot Json           @map("rules_snapshot")
   expiresAt     DateTime?      @map("expires_at")
@@ -398,11 +464,11 @@ model OutboxMessage {
   provider          String
   toAddress         String         @map("to_address")
   body              String
+  /// WhatsApp template name and variables. Cleared after sending, because it holds the claim token.
+  template          Json?
   status            MessageStatus  @default(QUEUED)
   attempts          Int            @default(0)
   nextAttemptAt     DateTime       @default(now()) @map("next_attempt_at")
-  /// Delivery lease: a worker owns the row until this time, so two workers never send it twice.
-  lockedUntil       DateTime?      @map("locked_until")
   providerMessageId String?        @map("provider_message_id")
   errorCode         String?        @map("error_code")
   idempotencyKey    String         @unique @map("idempotency_key")
@@ -455,7 +521,72 @@ model Lead {
   city      String?
   vertical  String?
   message   String?
+  /// HMAC of the submitter's IP, only for rate limiting. The raw IP is never stored.
+  ipHash    String?  @map("ip_hash")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([ipHash, createdAt])
   @@map("leads")
+}
+
+/// One row per rate-limited public action (keyed by purpose + hashed IP). Old rows can be deleted freely.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([key, createdAt])
+  @@map("rate_limit_hits")
+}
+
+// ─── Integrations ────────────────────────────────────────────────────────────
+
+/// A connection from another booking tool. It pushes bookings and cancellations to the SlotBack
+/// API with a secret key (only its hash is stored), and can receive signed webhooks when SlotBack
+/// refills a slot, so the other tool's calendar stays in step.
+model Integration {
+  id           String            @id @default(cuid())
+  locationId   String            @map("location_id")
+  name         String
+  /// First characters of the key, so staff can tell keys apart. Not enough to use it.
+  keyPrefix    String            @map("key_prefix")
+  keyHash      String            @unique @map("key_hash")
+  /// HTTPS endpoint that receives signed events. Optional.
+  webhookUrl   String?           @map("webhook_url")
+  /// Start offering a slot to the waitlist as soon as the other tool reports a cancellation.
+  autoRefill   Boolean           @default(true) @map("auto_refill")
+  createdById  String?           @map("created_by_id")
+  lastUsedAt   DateTime?         @map("last_used_at")
+  revokedAt    DateTime?         @map("revoked_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  location     Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  deliveries   WebhookDelivery[]
+
+  @@index([locationId])
+  @@map("integrations")
+}
+
+enum WebhookStatus {
+  QUEUED
+  DELIVERED
+  FAILED
+}
+
+/// An event waiting to be (or already) sent to an integration's webhook, retried with backoff.
+model WebhookDelivery {
+  id            String        @id @default(cuid())
+  integrationId String        @map("integration_id")
+  event         String
+  payload       Json
+  status        WebhookStatus @default(QUEUED)
+  attempts      Int           @default(0)
+  nextAttemptAt DateTime      @default(now()) @map("next_attempt_at")
+  lastError     String?       @map("last_error")
+  deliveredAt   DateTime?     @map("delivered_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  integration   Integration   @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@map("webhook_deliveries")
 }

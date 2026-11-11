@@ -2,34 +2,54 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, LayoutDashboard, MessageCircle, Settings } from "lucide-react";
+import { BarChart3, BellRing, CalendarDays, LayoutDashboard, ListChecks, RefreshCcw, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
   { href: "/app", label: "Today", icon: LayoutDashboard },
-  { href: "/app/appointments", label: "Appointments", icon: CalendarDays },
-  { href: "/app/messages", label: "Messages", icon: MessageCircle },
+  { href: "/app/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/app/reminders", label: "Reminders", icon: BellRing },
+  { href: "/app/campaigns", label: "Recovery", icon: RefreshCcw },
+  { href: "/app/waitlist", label: "Waitlist", icon: ListChecks },
+  { href: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
 
-export function NavLinks({ orientation = "vertical" }: { orientation?: "vertical" | "horizontal" }) {
-  const pathname = usePathname();
+type Orientation = "vertical" | "horizontal";
+
+export function NavLinks({ orientation = "vertical" }: { orientation?: Orientation }) {
+  return <NavList orientation={orientation} pathname={usePathname()} />;
+}
+
+/** Rendered while the current path is unknown (dynamic routes stream it in). */
+export function NavLinksFallback({ orientation = "vertical" }: { orientation?: Orientation }) {
+  return <NavList orientation={orientation} pathname={null} />;
+}
+
+function NavList({ orientation, pathname }: { orientation: Orientation; pathname: string | null }) {
+  // In the phone top bar, icons sit closer together and the bar scrolls rather than widening the page.
   return (
-    <nav aria-label="Main" className={cn("flex gap-1", orientation === "vertical" ? "flex-col" : "flex-row")}>
+    <nav
+      aria-label="Main"
+      className={cn("flex", orientation === "vertical" ? "flex-col gap-1" : "min-w-0 flex-row gap-0.5 overflow-x-auto sm:gap-1")}
+    >
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-        const active = href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+        const active = pathname !== null && (href === "/app" ? pathname === "/app" : pathname.startsWith(href));
         return (
           <Link
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-raised hover:text-foreground",
+              "flex h-9 shrink-0 items-center gap-2.5 rounded-lg text-sm font-medium",
+              orientation === "horizontal" ? "px-2 sm:px-3" : "px-3",
+              "text-muted transition-colors hover:bg-surface-raised hover:text-foreground",
               active && "bg-surface-raised text-foreground",
             )}
           >
             <Icon className="size-4" aria-hidden />
-            {label}
+            {/* Icon-only on narrow screens in the top bar; the label stays available to screen readers. */}
+            <span className={orientation === "horizontal" ? "sr-only sm:not-sr-only" : undefined}>{label}</span>
           </Link>
         );
       })}

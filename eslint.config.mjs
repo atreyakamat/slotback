@@ -12,8 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Marketing content projects (e.g. Remotion reels) have their own tooling.
-    "content/**",
+    // The Expo staff app has its own lint setup.
+    "mobile/**",
+    // The marketing site is a separate static app with its own lint setup.
+    "site/**",
   ]),
 ]);
 

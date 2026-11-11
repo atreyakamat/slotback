@@ -5,6 +5,8 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
+  // Tests share one demo workspace (and one resets it), so run them one at a time.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

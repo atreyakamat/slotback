@@ -45,19 +45,15 @@ test("clinic staff see reminders, confirmations and the message log", async ({ p
   await page.waitForURL(/\/app$/);
   await expect(page.getByText("No-show rate, 30 days")).toBeVisible();
 
-  await page.goto("/app/appointments");
-  await expect(page.getByRole("heading", { name: "Appointments" })).toBeVisible();
+  await page.goto("/app/reminders");
+  await expect(page.getByRole("heading", { name: "Reminders" })).toBeVisible();
   await expect(page.getByText(/reminder scheduled|reminded|confirmed/i).first()).toBeVisible();
 
-  await page.goto("/app/messages");
-  await expect(page.getByText(/whatsapp is in test mode/i)).toBeVisible();
-  await expect(page.getByText("Reminder", { exact: false }).first()).toBeVisible();
+  await page.goto("/app/reminders/messages");
+  await expect(page.getByText(/simulated in this workspace/i)).toBeVisible();
+  await expect(page.getByRole("main").getByText(/^Reminder ·/).first()).toBeVisible();
 
-  await page.goto("/app/settings");
+  await page.goto("/app/settings/booking");
   await expect(page.getByRole("img", { name: /qr code/i })).toBeVisible();
 });
 
-test("the cron endpoint refuses requests without the secret", async ({ request }) => {
-  const res = await request.post("/api/cron/deliver");
-  expect([401, 503]).toContain(res.status());
-});

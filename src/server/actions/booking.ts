@@ -11,7 +11,10 @@ import {
   stopWhatsAppReminders,
 } from "../appointments/core";
 import { db } from "../db";
+import { DomainError } from "../domain/errors";
 import { env } from "../env";
+import { LIMITS } from "../security/rate-limit";
+import { limitByIp } from "../security/request";
 
 export type BookingFormState = { error?: string; fields?: { name: string; phone: string } };
 
@@ -39,6 +42,12 @@ export async function submitBooking(_prev: BookingFormState, formData: FormData)
   const parsed = bookingSchema.safeParse(Object.fromEntries(formData));
   const fields = { name: String(formData.get("name") ?? ""), phone: String(formData.get("phone") ?? "") };
   if (!parsed.success) return { error: "Please check your details and try again.", fields };
+  try {
+    await limitByIp("book", LIMITS.bookPerIp, "Too many bookings from this connection. Please call the clinic.");
+  } catch (err) {
+    if (err instanceof DomainError) return { error: err.message, fields };
+    throw err;
+  }
 
   const result = await bookOnline(
     db,
@@ -50,7 +59,7 @@ export async function submitBooking(_prev: BookingFormState, formData: FormData)
       phone: parsed.data.phone,
       whatsappConsent: parsed.data.whatsappConsent === "on",
     },
-    { now: new Date(), baseUrl: env().NEXT_PUBLIC_APP_URL },
+    { now: new Date(), baseUrl: env().NEXT_PUBLIC_APP_URL, messageProvider: env().MESSAGE_PROVIDER },
   );
   if (!result.ok) return { error: ERRORS[result.error], fields };
   redirect(`/a/${result.token}?booked=1`);

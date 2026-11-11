@@ -29,7 +29,6 @@ ADD COLUMN     "slot_interval_minutes" INTEGER NOT NULL DEFAULT 15;
 
 -- AlterTable
 ALTER TABLE "outbox_messages" ADD COLUMN     "appointment_id" TEXT,
-ADD COLUMN     "locked_until" TIMESTAMP(3),
 ADD COLUMN     "purpose" "MessagePurpose" NOT NULL DEFAULT 'OFFER';
 
 -- CreateIndex

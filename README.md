@@ -4,13 +4,19 @@
 
 India-first, piloting in Goa. Product scope lives in the PRD; this repository is the demo-ready MVP.
 
-## Appointment reminders (clinics)
+## What's in the app
 
-- **Public booking link** at `/book/{slug}`: patients pick a service, day and free time, and leave a WhatsApp number with consent.
-- **WhatsApp reminders** (default 24h and 2h before), moved out of quiet hours, with a one-tap confirm or cancel link (`/a/{token}`; only the token's hash is stored).
-- **No-show tracking**: staff record "came" or "no-show"; the overview shows the 30-day no-show rate and repeat no-shows are flagged.
-- **Cancellations feed recovery**: a cancellation with enough notice drafts a recovery campaign for the freed slot.
-- Delivery goes through the outbox and a provider adapter. Only a **mock** WhatsApp provider exists today.
+- **Landing page** (`/`) with a Book-a-demo form, FAQ and privacy page
+- **Today**: recovered revenue for the last 30 days, fill rate, latest recoveries, today's bookings by staff member
+- **Schedule**: day grid and week list; book, move, complete, mark no-show, cancel
+- **Recovery**: cancel and refill, ranked audience with reasons, message preview, batched offers, live status
+- **Claim page** (`/c/…`): what a customer sees from WhatsApp/SMS, first to confirm wins
+- **Waitlist**: per-channel consent, preferred days and times
+- **Analytics**: recovered vs completed revenue, daily chart, funnel, CSV export
+- **Appointment reminders (clinics)**: public booking link (`/book/{slug}`), WhatsApp confirmation and reminders (default 24h and 2h before, outside quiet hours) with a one-tap confirm/cancel link (`/a/{token}`), a **Reminders** board (`/app/reminders`) for unconfirmed patients and no-shows, and a message log. Messages go through the same outbox, providers and every-minute `tick` job as recovery offers, and booking settings live under **Settings → Booking & reminders**. A cancellation with enough notice opens a draft recovery campaign
+- **Settings**: business rules (lead time, offer window, quiet hours), services, staff, activity log, demo reset
+
+To present it, follow [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
 
 ## Stack
 
@@ -24,6 +30,8 @@ India-first, piloting in Goa. Product scope lives in the PRD; this repository is
 | CI / hosting | GitHub Actions, Netlify |
 
 ## Getting started
+
+**Just want to run the demo?** With Docker installed: `docker compose up --build`, then open http://localhost:3000. See [docs/DOCKER_DEMO.md](docs/DOCKER_DEMO.md), including how to claim on a phone.
 
 Requirements: Node 22+, pnpm 10, Postgres 15+ (local install or `docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`).
 
@@ -56,7 +64,8 @@ Database tests need their own database, e.g. `TEST_DATABASE_URL=postgresql://pos
 prisma/              schema, migrations, seed entry
 src/app/             routes: landing (/), /login, staff console (/app/*), /api/*
 src/components/      UI primitives, theme, app shell
-src/server/          server-only code: env, db, auth (session + DAL), actions, queries, demo seed
+src/server/          server-only code: env, db, auth (session + DAL), domain rules, messaging, actions, queries, demo seed
+netlify/functions/   scheduled job (every minute): expiry and message delivery
 src/lib/             shared pure helpers (time zones, money)
 tests/               Vitest unit and integration tests
 e2e/                 Playwright tests
@@ -76,7 +85,13 @@ These are enforced by the database, not only the UI:
 
 ## Demo data
 
-There are two fictional demo workspaces: "Casa Verde Salon" in Panaji and "Smile Studio Dental" in Margao (online booking at `/book/smile-studio-demo`). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Owners of the demo workspace can reset it from **Settings**.
+The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji, with a month of bookings and recovery history so the dashboard opens with believable numbers (around a 50% fill rate). All names are invented and all phone numbers are in the reserved `+91 90000 000xx` range. Demo workspaces always use the simulated message provider, so nothing reaches a real phone. A second demo, "Smile Studio Dental" in Margao, shows clinic reminders and online booking at `/book/smile-studio-demo` (log in with **Try the dental clinic demo**). Owners can reset the demos from **Settings**.
+
+## Known limits (by design, for now)
+
+- Messaging is simulated. A real WhatsApp/SMS provider needs an account, templates and a spend decision.
+- Sign-in is the one-click demo login. Email sign-in for real businesses comes with the first pilot.
+- Claim links rely on 256-bit unguessable tokens; there is no per-IP rate limit on the claim page yet.
 
 ## Deployment
 

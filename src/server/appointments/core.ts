@@ -12,6 +12,9 @@ import { normalizeIndianMobile } from "@/lib/phone";
 import { planReminders } from "@/lib/reminders";
 import { freeSlots, type BusinessHours } from "@/lib/slots";
 import { addDays, formatDate, formatTime, localDateKey, zonedToUtc } from "@/lib/time";
+import { openCampaignInTx } from "../domain/campaigns";
+import { providerFor } from "../messaging/registry";
+import { appointmentTemplate } from "../messaging/templates";
 
 type Tx = Prisma.TransactionClient;
 
@@ -54,6 +57,7 @@ function whenPhrase(startAt: Date, sendAt: Date, timeZone: string): string {
   return `on ${formatDate(startAt, timeZone)} at ${time}`;
 }
 
+/** Plain-text bodies. The approved WhatsApp templates (docs/WHATSAPP_SETUP.md) carry the same wording. */
 export function confirmationBody(c: MessageContext, now: Date): string {
   const first = c.customerName.split(" ")[0];
   return (
@@ -70,6 +74,17 @@ export function reminderBody(c: MessageContext, sendAt: Date): string {
   );
 }
 
+function templateFor(kind: "booked" | "reminder", c: MessageContext, sendAt: Date, token: string) {
+  const template = appointmentTemplate(kind, {
+    customerName: c.customerName,
+    serviceName: c.serviceName,
+    businessName: c.locationName,
+    when: whenPhrase(c.startAt, sendAt, c.timeZone),
+    token,
+  });
+  return template as unknown as Prisma.InputJsonValue;
+}
+
 export type QueueInput = {
   appointment: { id: string; startAt: Date; locationId: string };
   location: { name: string; timezone: string; quietHoursStart: string; quietHoursEnd: string; reminderOffsetsMinutes: number[] };
@@ -79,6 +94,8 @@ export type QueueInput = {
   baseUrl: string;
   now: Date;
   includeConfirmation: boolean;
+  /** Provider name from `providerFor` (the demo provider for demo workspaces). */
+  provider: string;
 };
 
 /** Builds the booking confirmation (optional) and scheduled reminder rows for one appointment. */
@@ -95,7 +112,7 @@ export function buildAppointmentMessages(q: QueueInput): Prisma.OutboxMessageCre
     locationId: q.appointment.locationId,
     appointmentId: q.appointment.id,
     channel: "WHATSAPP" as const,
-    provider: "whatsapp",
+    provider: q.provider,
     toAddress: q.customer.phone,
   };
   const rows: Prisma.OutboxMessageCreateManyInput[] = [];
@@ -104,6 +121,7 @@ export function buildAppointmentMessages(q: QueueInput): Prisma.OutboxMessageCre
       ...base,
       purpose: "BOOKING_CONFIRMATION",
       body: confirmationBody(ctx, q.now),
+      template: templateFor("booked", ctx, q.now, q.token),
       nextAttemptAt: q.now,
       idempotencyKey: `appt:${q.appointment.id}:confirmation`,
     });
@@ -120,6 +138,7 @@ export function buildAppointmentMessages(q: QueueInput): Prisma.OutboxMessageCre
       ...base,
       purpose: "APPOINTMENT_REMINDER",
       body: reminderBody(ctx, r.sendAt),
+      template: templateFor("reminder", ctx, r.sendAt, q.token),
       nextAttemptAt: r.sendAt,
       idempotencyKey: `appt:${q.appointment.id}:reminder:${r.offsetMinutes}`,
     });
@@ -171,6 +190,7 @@ export async function getBookingLocation(db: PrismaClient | Tx, slug: string) {
       phone: true,
       timezone: true,
       organizationId: true,
+      organization: { select: { isDemo: true } },
       businessHours: true,
       minLeadMinutes: true,
       bookingHorizonDays: true,
@@ -231,7 +251,7 @@ export async function findFreeSlots(
 export async function bookOnline(
   db: PrismaClient,
   input: BookingInput,
-  opts: { now: Date; baseUrl: string },
+  opts: { now: Date; baseUrl: string; messageProvider?: string },
 ): Promise<BookingResult> {
   const name = input.name.trim().replace(/\s+/g, " ");
   if (name.length < 2 || name.length > 80) return { ok: false, error: "invalid-name" };
@@ -301,6 +321,7 @@ export async function bookOnline(
             baseUrl: opts.baseUrl,
             now: opts.now,
             includeConfirmation: true,
+            provider: providerFor({ isDemo: location.organization.isDemo, configured: opts.messageProvider }).name,
           })
         : 0;
 
@@ -339,7 +360,7 @@ const appointmentForTransition = {
   valuePaise: true,
   confirmedAt: true,
   customerId: true,
-  location: { select: { id: true, organizationId: true, minLeadMinutes: true, offerTtlMinutes: true, offerBatchSize: true } },
+  location: { select: { id: true, organizationId: true, minLeadMinutes: true } },
 } satisfies Prisma.AppointmentSelect;
 
 /** Scope for a lookup: staff pass their location id; customers pass their token hash. */
@@ -395,32 +416,14 @@ export async function cancelAppointment(
 
     await tx.outboxMessage.updateMany({
       where: { appointmentId: a.id, status: "QUEUED" },
-      data: { status: "CANCELLED", errorCode: "appointment_cancelled", lockedUntil: null },
+      data: { status: "CANCELLED", errorCode: "appointment_cancelled" },
     });
 
     let campaignId: string | null = null;
     const leadMinutes = (a.startAt.getTime() - now.getTime()) / 60_000;
     if (leadMinutes >= a.location.minLeadMinutes) {
-      const campaign = await tx.recoveryCampaign.create({
-        data: {
-          locationId: a.location.id,
-          appointmentId: a.id,
-          serviceId: a.serviceId,
-          resourceId: a.resourceId,
-          startAt: a.startAt,
-          endAt: a.endAt,
-          valuePaise: a.valuePaise,
-          status: "DRAFT",
-          rulesSnapshot: {
-            minLeadMinutes: a.location.minLeadMinutes,
-            offerTtlMinutes: a.location.offerTtlMinutes,
-            offerBatchSize: a.location.offerBatchSize,
-          },
-          createdById: actor.type === "USER" ? actor.id : null,
-        },
-        select: { id: true },
-      });
-      campaignId = campaign.id;
+      const by = { organizationId: a.location.organizationId, locationId: a.location.id, userId: actor.type === "USER" ? actor.id : null };
+      campaignId = (await openCampaignInTx(tx, by, a.id, now)).id;
     }
 
     await audit(tx, a.location.organizationId, actor, a.id, "appointment.cancelled", {
@@ -428,38 +431,6 @@ export async function cancelAppointment(
       recoveryDrafted: campaignId !== null,
     });
     return { ok: true, campaignId };
-  });
-}
-
-/** Staff record what happened after the start time: the patient came (COMPLETED) or did not (NO_SHOW). */
-export async function recordOutcome(
-  db: PrismaClient,
-  ref: { id: string; locationId: string },
-  outcome: "COMPLETED" | "NO_SHOW",
-  actor: Actor,
-  now: Date,
-): Promise<TransitionResult> {
-  return db.$transaction(async (tx) => {
-    const a = await tx.appointment.findFirst({ where: whereFor(ref), select: appointmentForTransition });
-    if (!a) return { ok: false, error: "not-found" };
-    if (a.startAt > now) return { ok: false, error: "not-allowed" };
-    // Staff may correct a recorded outcome, but never revive a cancelled appointment.
-    if (a.status === "CANCELLED" || a.status === outcome) return a.status === outcome ? { ok: true } : { ok: false, error: "not-allowed" };
-    await tx.appointment.update({
-      where: { id: a.id },
-      data:
-        outcome === "NO_SHOW"
-          ? { status: "NO_SHOW", noShowAt: now, completedAt: null }
-          : { status: "COMPLETED", completedAt: now, noShowAt: null },
-    });
-    await tx.outboxMessage.updateMany({
-      where: { appointmentId: a.id, status: "QUEUED" },
-      data: { status: "CANCELLED", errorCode: "appointment_finished", lockedUntil: null },
-    });
-    await audit(tx, a.location.organizationId, actor, a.id, outcome === "NO_SHOW" ? "appointment.no_show" : "appointment.completed", {
-      previous: a.status,
-    });
-    return { ok: true };
   });
 }
 
@@ -478,7 +449,7 @@ export async function stopWhatsAppReminders(db: PrismaClient, tokenHash: string,
     });
     await tx.outboxMessage.updateMany({
       where: { appointment: { customerId: a.customerId }, channel: "WHATSAPP", status: "QUEUED" },
-      data: { status: "SUPPRESSED", errorCode: "consent_revoked", lockedUntil: null },
+      data: { status: "SUPPRESSED", errorCode: "consent_revoked" },
     });
     await tx.auditEvent.create({
       data: {

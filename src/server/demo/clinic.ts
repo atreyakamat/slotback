@@ -77,6 +77,7 @@ export async function seedDemoClinic(
     data: {
       name: DEMO_CLINIC_NAME,
       isDemo: true,
+      onboardedAt: now,
       memberships: { create: { userId, role: "OWNER" } },
       locations: {
         create: {
@@ -212,11 +213,12 @@ export async function seedDemoClinic(
       baseUrl,
       now: bookedAt,
       includeConfirmation: d.source === "ONLINE",
+      provider: "demo",
     })) {
       const due = new Date(m.nextAttemptAt as Date) <= now;
       messages.push(
         due
-          ? { ...m, status: "SENT", provider: "mock-whatsapp", providerMessageId: `mock_${m.idempotencyKey}`, sentAt: m.nextAttemptAt, attempts: 1 }
+          ? { ...m, status: "DELIVERED", provider: "demo", providerMessageId: `demo_${m.idempotencyKey}`, sentAt: m.nextAttemptAt, attempts: 1 }
           : m,
       );
     }

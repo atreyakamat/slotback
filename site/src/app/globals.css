@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #faf8f3;
+  --surface: #ffffff;
+  --ink: #0b1f17;
+  --muted: #56655d;
+  --line: #e7e2d6;
+  --green: #0f2e22;
+  --green-soft: #e8efe9;
+  --lime: #c6f432;
+  --red: #b5432f;
+  --red-soft: #fbece8;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+  --color-lime: var(--lime);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+
+  --font-sans: var(--font-instrument);
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01";
+}
+
+::selection {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+input[type="range"] {
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--green) var(--fill, 50%), var(--line) var(--fill, 50%));
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--green);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--green);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

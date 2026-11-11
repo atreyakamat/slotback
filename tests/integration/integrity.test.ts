@@ -94,7 +94,7 @@ describe.skipIf(!hasTestDb)("demo seed", () => {
     const location = await db.location.findUniqueOrThrow({ where: { id: clinic.locationId } });
     expect(location).toMatchObject({ bookingSlug: "smile-studio-demo", bookingEnabled: true });
     expect(await db.outboxMessage.count({ where: { locationId: location.id, status: "QUEUED" } })).toBeGreaterThan(0);
-    expect(await db.outboxMessage.count({ where: { locationId: location.id, status: "SENT" } })).toBeGreaterThan(0);
+    expect(await db.outboxMessage.count({ where: { locationId: location.id, status: "DELIVERED" } })).toBeGreaterThan(0);
     expect(await db.recoveryCampaign.count({ where: { locationId: location.id, status: "DRAFT" } })).toBe(1);
     expect(await db.appointment.count({ where: { locationId: location.id, status: "NO_SHOW" } })).toBeGreaterThan(0);
   });
