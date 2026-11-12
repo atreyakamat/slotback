@@ -1,8 +1,16 @@
 # SlotBack
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 **Make every opening count.** SlotBack refills last-minute cancellations for appointment businesses. When a slot opens up, opted-in waitlist customers get a secure, expiring link; the first to claim it gets the appointment; the owner sees the revenue recovered.
 
-India-first, piloting in Goa. Product scope lives in the PRD; this repository is the demo-ready MVP.
+Built India-first and piloted in Goa. Open source under the MIT license; this repository is the demo-ready MVP.
+
+![Appointments board: reminders, confirmations and no-shows](docs/screenshots/6-appointments.png)
+
+| Public booking page | Patient confirm / cancel page |
+| --- | --- |
+| ![Booking slots](docs/screenshots/2-book-slots.png) | ![Patient manage page](docs/screenshots/4-patient-manage.png) |
 
 ## What's in the app
 
@@ -96,3 +104,11 @@ The demo workspace is a fictional salon, "Casa Verde Salon" in Panaji, with a mo
 ## Deployment
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR, run `pnpm lint`, `pnpm typecheck` and `pnpm test`. Never commit real customer data or secrets: `.env*` files are git-ignored, and the demo seed is fictional.
+
+## License
+
+[MIT](LICENSE) © 2026 Atreya Kamat
