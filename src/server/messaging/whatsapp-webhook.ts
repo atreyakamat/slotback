@@ -1,4 +1,3 @@
-import type { MessageStatus } from "@/generated/prisma/client";
 import { normalizeIndianPhone } from "../domain/customers";
 import type { Db } from "../domain/types";
 import { setConsent } from "../domain/waitlist";
@@ -15,10 +14,10 @@ export type WhatsAppWebhook = {
   }[];
 };
 
-const STATUS: Record<string, MessageStatus> = { sent: "SENT", delivered: "DELIVERED", read: "DELIVERED", failed: "FAILED" };
+type ReceiptStatus = "SENT" | "DELIVERED" | "FAILED";
+const STATUS: Record<string, ReceiptStatus> = { sent: "SENT", delivered: "DELIVERED", read: "DELIVERED", failed: "FAILED" };
 /** A status update only moves forward: a late "sent" never overwrites "delivered". */
-const MAY_BECOME: Record<MessageStatus, MessageStatus[]> = {
-  QUEUED: [],
+const MAY_BECOME: Record<ReceiptStatus, ("QUEUED" | "SENT")[]> = {
   SENT: ["QUEUED"],
   DELIVERED: ["QUEUED", "SENT"],
   FAILED: ["QUEUED", "SENT"],

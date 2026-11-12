@@ -20,14 +20,14 @@ enum Role {
 }
 
 model User {
-  id          String          @id @default(cuid())
-  email       String          @unique
-  name        String
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String
   /// Bumped to sign the user out of every browser: web sessions carry the version they were issued with.
-  sessionVersion Int          @default(0) @map("session_version")
-  createdAt   DateTime        @default(now()) @map("created_at")
-  memberships Membership[]
-  devices     DeviceSession[]
+  sessionVersion Int             @default(0) @map("session_version")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  memberships    Membership[]
+  devices        DeviceSession[]
 
   @@map("users")
 }
@@ -109,40 +109,49 @@ model Invite {
 }
 
 model Location {
-  id              String             @id @default(cuid())
-  organizationId  String             @map("organization_id")
-  name            String
-  address         String?
-  phone           String?
-  timezone        String             @default("Asia/Kolkata")
-  currency        String             @default("INR")
+  id                     String             @id @default(cuid())
+  organizationId         String             @map("organization_id")
+  name                   String
+  address                String?
+  phone                  String?
+  timezone               String             @default("Asia/Kolkata")
+  currency               String             @default("INR")
   /// Weekly opening hours: { "0": [{ "open": "10:00", "close": "20:00" }], ... } keyed by weekday (0 = Sunday).
-  businessHours   Json               @map("business_hours")
+  businessHours          Json               @map("business_hours")
   /// Minimum notice before a slot starts for it to be offered.
-  minLeadMinutes  Int                @default(60) @map("min_lead_minutes")
+  minLeadMinutes         Int                @default(60) @map("min_lead_minutes")
   /// How long an offer link stays claimable.
-  offerTtlMinutes Int                @default(30) @map("offer_ttl_minutes")
+  offerTtlMinutes        Int                @default(30) @map("offer_ttl_minutes")
   /// Customers contacted per campaign launch.
-  offerBatchSize  Int                @default(5) @map("offer_batch_size")
+  offerBatchSize         Int                @default(5) @map("offer_batch_size")
   /// No customer messages between these local times ("HH:mm").
-  quietHoursStart String             @default("21:00") @map("quiet_hours_start")
-  quietHoursEnd   String             @default("09:00") @map("quiet_hours_end")
+  quietHoursStart        String             @default("21:00") @map("quiet_hours_start")
+  quietHoursEnd          String             @default("09:00") @map("quiet_hours_end")
   /// When a round closes unclaimed, offer the slot to the next people in line without staff action.
-  autoNextRound   Boolean            @default(true) @map("auto_next_round")
+  autoNextRound          Boolean            @default(true) @map("auto_next_round")
   /// Most rounds a campaign sends, counting the first one staff start.
-  maxRounds       Int                @default(3) @map("max_rounds")
+  maxRounds              Int                @default(3) @map("max_rounds")
   /// Public code in the waitlist self-join link (/join/<code>). Created when first shared; rotating it retires old QR posters.
-  joinCode        String?            @unique @map("join_code")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  organization    Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  services        Service[]
-  resources       Resource[]
-  customers       Customer[]
-  appointments    Appointment[]
-  waitlistEntries WaitlistEntry[]
-  campaigns       RecoveryCampaign[]
-  outboxMessages  OutboxMessage[]
-  integrations    Integration[]
+  joinCode               String?            @unique @map("join_code")
+  /// Public booking link path segment: /book/{bookingSlug}.
+  bookingSlug            String?            @unique @map("booking_slug")
+  bookingEnabled         Boolean            @default(false) @map("booking_enabled")
+  /// How far ahead patients can book online.
+  bookingHorizonDays     Int                @default(14) @map("booking_horizon_days")
+  /// Granularity of start times offered online.
+  slotIntervalMinutes    Int                @default(15) @map("slot_interval_minutes")
+  /// Appointment reminders, in minutes before the start time. Default: 24h and 2h.
+  reminderOffsetsMinutes Int[]              @default([1440, 120]) @map("reminder_offsets_minutes")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  services               Service[]
+  resources              Resource[]
+  customers              Customer[]
+  appointments           Appointment[]
+  waitlistEntries        WaitlistEntry[]
+  campaigns              RecoveryCampaign[]
+  outboxMessages         OutboxMessage[]
+  integrations           Integration[]
 
   @@index([organizationId])
   @@map("locations")
@@ -251,6 +260,7 @@ enum AppointmentStatus {
 enum AppointmentSource {
   DIRECT
   RECOVERY
+  ONLINE
 }
 
 /// Overlap protection: a Postgres exclusion constraint (see migrations) rejects two
@@ -269,6 +279,11 @@ model Appointment {
   cancelReason     String?           @map("cancel_reason")
   cancelledAt      DateTime?         @map("cancelled_at")
   completedAt      DateTime?         @map("completed_at")
+  /// Set when the customer (via their link) or staff confirm attendance.
+  confirmedAt      DateTime?         @map("confirmed_at")
+  noShowAt         DateTime?         @map("no_show_at")
+  /// SHA-256 of the customer's manage-booking token. The raw token only exists in the link.
+  manageTokenHash  String?           @unique @map("manage_token_hash")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
   location         Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
@@ -279,6 +294,7 @@ model Appointment {
   recoveryCampaign RecoveryCampaign? @relation("CampaignOrigin")
   /// Set when this appointment was booked by claiming a recovery offer.
   claim            Claim?
+  messages         OutboxMessage[]
   /// For bookings synced from another scheduler: which connection sent it, and its id there.
   integrationId    String?           @map("integration_id")
   externalId       String?           @map("external_id")
@@ -286,6 +302,7 @@ model Appointment {
 
   @@unique([integrationId, externalId])
   @@index([locationId, startAt])
+  @@index([customerId, status])
   @@index([resourceId, startAt])
   @@map("appointments")
 }
@@ -423,32 +440,47 @@ enum MessageStatus {
   SENT
   DELIVERED
   FAILED
+  /// Withdrawn before sending, e.g. the appointment was cancelled.
+  CANCELLED
+  /// Not sent because consent was missing or revoked at send time.
+  SUPPRESSED
+}
+
+enum MessagePurpose {
+  OFFER
+  BOOKING_CONFIRMATION
+  APPOINTMENT_REMINDER
 }
 
 /// Durable outbox. Rows are written in the same transaction as the state change that
 /// causes them, then delivered by a worker through the configured provider adapter.
 model OutboxMessage {
-  id                String        @id @default(cuid())
-  locationId        String        @map("location_id")
-  offerId           String?       @map("offer_id")
+  id                String         @id @default(cuid())
+  locationId        String         @map("location_id")
+  offerId           String?        @map("offer_id")
+  appointmentId     String?        @map("appointment_id")
+  purpose           MessagePurpose @default(OFFER)
   channel           Channel
   provider          String
-  toAddress         String        @map("to_address")
+  toAddress         String         @map("to_address")
   body              String
   /// WhatsApp template name and variables. Cleared after sending, because it holds the claim token.
   template          Json?
-  status            MessageStatus @default(QUEUED)
-  attempts          Int           @default(0)
-  nextAttemptAt     DateTime      @default(now()) @map("next_attempt_at")
-  providerMessageId String?       @map("provider_message_id")
-  errorCode         String?       @map("error_code")
-  idempotencyKey    String        @unique @map("idempotency_key")
-  sentAt            DateTime?     @map("sent_at")
-  createdAt         DateTime      @default(now()) @map("created_at")
-  location          Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  offer             Offer?        @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  status            MessageStatus  @default(QUEUED)
+  attempts          Int            @default(0)
+  nextAttemptAt     DateTime       @default(now()) @map("next_attempt_at")
+  providerMessageId String?        @map("provider_message_id")
+  errorCode         String?        @map("error_code")
+  idempotencyKey    String         @unique @map("idempotency_key")
+  sentAt            DateTime?      @map("sent_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  location          Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  offer             Offer?         @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  appointment       Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
   @@index([status, nextAttemptAt])
+  @@index([appointmentId])
+  @@index([locationId, createdAt])
   @@map("outbox_messages")
 }
 
@@ -513,23 +545,23 @@ model RateLimitHit {
 /// API with a secret key (only its hash is stored), and can receive signed webhooks when SlotBack
 /// refills a slot, so the other tool's calendar stays in step.
 model Integration {
-  id            String        @id @default(cuid())
-  locationId    String        @map("location_id")
-  name          String
+  id           String            @id @default(cuid())
+  locationId   String            @map("location_id")
+  name         String
   /// First characters of the key, so staff can tell keys apart. Not enough to use it.
-  keyPrefix     String        @map("key_prefix")
-  keyHash       String        @unique @map("key_hash")
+  keyPrefix    String            @map("key_prefix")
+  keyHash      String            @unique @map("key_hash")
   /// HTTPS endpoint that receives signed events. Optional.
-  webhookUrl    String?       @map("webhook_url")
+  webhookUrl   String?           @map("webhook_url")
   /// Start offering a slot to the waitlist as soon as the other tool reports a cancellation.
-  autoRefill    Boolean       @default(true) @map("auto_refill")
-  createdById   String?       @map("created_by_id")
-  lastUsedAt    DateTime?     @map("last_used_at")
-  revokedAt     DateTime?     @map("revoked_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  location      Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  appointments  Appointment[]
-  deliveries    WebhookDelivery[]
+  autoRefill   Boolean           @default(true) @map("auto_refill")
+  createdById  String?           @map("created_by_id")
+  lastUsedAt   DateTime?         @map("last_used_at")
+  revokedAt    DateTime?         @map("revoked_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  location     Location          @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  deliveries   WebhookDelivery[]
 
   @@index([locationId])
   @@map("integrations")

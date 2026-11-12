@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarDays, LayoutDashboard, ListChecks, RefreshCcw, Settings } from "lucide-react";
+import { BarChart3, BellRing, CalendarDays, LayoutDashboard, ListChecks, RefreshCcw, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const NAV_ITEMS = [
   { href: "/app", label: "Today", icon: LayoutDashboard },
   { href: "/app/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/app/reminders", label: "Reminders", icon: BellRing },
   { href: "/app/campaigns", label: "Recovery", icon: RefreshCcw },
   { href: "/app/waitlist", label: "Waitlist", icon: ListChecks },
   { href: "/app/analytics", label: "Analytics", icon: BarChart3 },
@@ -26,8 +27,12 @@ export function NavLinksFallback({ orientation = "vertical" }: { orientation?: O
 }
 
 function NavList({ orientation, pathname }: { orientation: Orientation; pathname: string | null }) {
+  // In the phone top bar, icons sit closer together and the bar scrolls rather than widening the page.
   return (
-    <nav aria-label="Main" className={cn("flex gap-1", orientation === "vertical" ? "flex-col" : "flex-row")}>
+    <nav
+      aria-label="Main"
+      className={cn("flex", orientation === "vertical" ? "flex-col gap-1" : "min-w-0 flex-row gap-0.5 overflow-x-auto sm:gap-1")}
+    >
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname !== null && (href === "/app" ? pathname === "/app" : pathname.startsWith(href));
         return (
@@ -36,7 +41,9 @@ function NavList({ orientation, pathname }: { orientation: Orientation; pathname
             href={href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm font-medium text-muted transition-colors hover:bg-surface-raised hover:text-foreground",
+              "flex h-9 shrink-0 items-center gap-2.5 rounded-lg text-sm font-medium",
+              orientation === "horizontal" ? "px-2 sm:px-3" : "px-3",
+              "text-muted transition-colors hover:bg-surface-raised hover:text-foreground",
               active && "bg-surface-raised text-foreground",
             )}
           >

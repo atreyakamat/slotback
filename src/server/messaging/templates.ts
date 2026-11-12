@@ -41,7 +41,12 @@ export function confirmationMessage(i: Omit<OfferTemplateInput, "expiresAt" | "l
  */
 export type TemplateRef = { name: string; body: string[]; urlSuffix?: string };
 
-export const WHATSAPP_TEMPLATES = { offer: "slot_opening", confirmation: "slot_booked" } as const;
+export const WHATSAPP_TEMPLATES = {
+  offer: "slot_opening",
+  confirmation: "slot_booked",
+  appointmentBooked: "appointment_booked",
+  appointmentReminder: "appointment_reminder",
+} as const;
 
 /** WhatsApp rejects variables with line breaks, tabs or long runs of spaces. */
 const param = (v: string) => v.replace(/\s+/g, " ").trim().slice(0, 200);
@@ -73,7 +78,24 @@ export function confirmationTemplate(i: Omit<OfferTemplateInput, "expiresAt" | "
   };
 }
 
-/** Replaces a claim link in a sent message so the token is not kept at rest. */
+/**
+ * Online-booking confirmation and appointment reminders. Body variables: first name, service,
+ * business, when (e.g. "tomorrow at 10:30 am"). The URL button opens the manage link (/a/{token}).
+ */
+export function appointmentTemplate(
+  kind: "booked" | "reminder",
+  i: { customerName: string; serviceName: string; businessName: string; when: string; token: string },
+): TemplateRef {
+  return {
+    name: kind === "booked" ? WHATSAPP_TEMPLATES.appointmentBooked : WHATSAPP_TEMPLATES.appointmentReminder,
+    body: [i.customerName.split(" ")[0], i.serviceName, i.businessName, i.when].map(param),
+    urlSuffix: i.token,
+  };
+}
+
+/** Replaces claim and manage links in a sent message so their tokens are not kept at rest. */
 export function redactLinks(body: string): string {
-  return body.replace(/https?:\/\/\S+\/c\/[A-Za-z0-9_-]+/g, "[claim link]");
+  return body
+    .replace(/https?:\/\/\S+\/c\/[A-Za-z0-9_-]+/g, "[claim link]")
+    .replace(/https?:\/\/\S+\/a\/[A-Za-z0-9_-]+/g, "[manage link]");
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CalendarCheck, CalendarX2, FlaskConical, IndianRupee, ListChecks, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarX2, FlaskConical, IndianRupee, ListChecks, PhoneCall, Sparkles, UserX } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Skeleton } from "@/components/app/skeleton";
 import { AppointmentStatusBadge } from "@/components/app/status-badge";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPaise } from "@/lib/money";
 import { formatDate, formatTime } from "@/lib/time";
 import { canManage, requireMember } from "@/server/auth/dal";
+import { getNoShowStats } from "@/server/queries/appointments";
 import { getRecoveryMetrics } from "@/server/queries/metrics";
 import { getTodayOverview } from "@/server/queries/overview";
 
@@ -28,9 +29,10 @@ async function Today() {
   const member = await requireMember();
   if (!member.organization.onboardedAt && canManage(member)) redirect("/onboarding");
   const now = new Date();
-  const [{ resources, stats }, recovery] = await Promise.all([
+  const [{ resources, stats }, recovery, noShows] = await Promise.all([
     getTodayOverview(member, now),
     getRecoveryMetrics(member, 30, now),
+    getNoShowStats(member.location.id, now),
   ]);
   const tz = member.location.timezone;
   const firstName = member.user.name.split(" ")[0];
@@ -40,6 +42,19 @@ async function Today() {
     { label: "Booked value today", value: formatPaise(stats.bookedValuePaise), hint: "Owner-entered estimates", icon: IndianRupee },
     { label: "Active waitlist", value: String(stats.activeWaitlist), hint: "Customers ready for an opening", icon: ListChecks },
     { label: "Cancellations, 14 days", value: String(stats.recentCancellations), hint: "Openings you could refill", icon: CalendarX2 },
+    {
+      label: "No-show rate, 30 days",
+      value: noShows.rate === null ? "–" : `${Math.round(noShows.rate * 100)}%`,
+      hint: `${noShows.noShows} of ${noShows.total} recorded visits`,
+      icon: UserX,
+    },
+    {
+      label: "Unconfirmed, next 24h",
+      value: String(stats.unconfirmedNextDay),
+      hint: "Worth a quick call",
+      icon: PhoneCall,
+      href: "/app/reminders",
+    },
   ];
 
   return (
@@ -53,9 +68,12 @@ async function Today() {
       {member.organization.isDemo ? <DemoGuide /> : stats.activeWaitlist < 3 ? <GettingStarted waitlist={stats.activeWaitlist} /> : null}
       <RecoveryHero recovery={recovery} liveCampaigns={stats.liveCampaigns} tz={tz} />
 
-      <section aria-label="Today at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        {tiles.map(({ label, value, hint, icon: Icon }) => (
-          <Card key={label} className="p-4 sm:p-5">
+      <section aria-label="Today at a glance" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        {tiles.map(({ label, value, hint, icon: Icon, ...rest }) => (
+          <Card key={label} className="relative p-4 sm:p-5">
+            {"href" in rest && rest.href ? (
+              <Link href={rest.href} className="absolute inset-0 rounded-[var(--radius-card)]" aria-label={`${label}: open reminders`} />
+            ) : null}
             <div className="flex items-start justify-between gap-2 text-sm text-muted">
               {label}
               <Icon className="size-4 shrink-0" aria-hidden />
@@ -196,8 +214,8 @@ function TodaySkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading today">
       <Skeleton className="mb-8 h-12 w-64" />
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-[118px]" />
         ))}
       </div>

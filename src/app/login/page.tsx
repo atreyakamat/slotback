@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Sparkles } from "lucide-react";
+import { Smile, Sparkles } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,15 @@ async function Body({ searchParams }: { searchParams: PageProps<"/login">["searc
       )}
       {demoOn ? (
         <div className="grid gap-3 border-t pt-6">
-          <p className="text-sm text-muted">Just looking? Explore a sample Goa salon. Nothing you do there messages a real person.</p>
-          <form action={demoLogin}>
-            <Button type="submit" variant="secondary" size="lg" className="w-full">
+          <p className="text-sm text-muted">
+            Just looking? Explore a sample Goa salon or dental clinic. Nothing you do there messages a real person.
+          </p>
+          <form action={demoLogin} className="grid gap-2">
+            <Button type="submit" variant="secondary" size="lg" className="w-full" name="workspace" value="salon">
               <Sparkles /> Try the demo workspace
+            </Button>
+            <Button type="submit" variant="secondary" size="lg" className="w-full" name="workspace" value="clinic">
+              <Smile /> Try the dental clinic demo
             </Button>
           </form>
         </div>

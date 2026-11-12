@@ -70,6 +70,15 @@ export async function openCampaign(db: Db, actor: Actor, appointmentId: string, 
   });
 }
 
+/**
+ * Opens a draft campaign inside a caller's transaction, so a cancellation and its campaign
+ * commit together (used by the patient manage link, where there is no staff actor).
+ */
+export async function openCampaignInTx(tx: Prisma.TransactionClient, by: RoundBy, appointmentId: string, now = new Date()) {
+  const appointment = await tx.appointment.findFirstOrThrow({ where: { id: appointmentId, locationId: by.locationId } });
+  return createCampaign(tx, by, appointment, now);
+}
+
 async function createCampaign(
   tx: Prisma.TransactionClient,
   by: RoundBy,
@@ -174,7 +183,7 @@ function offerExpiry(sendAt: Date, rules: RulesSnapshot, campaignExpiresAt: Date
 }
 
 /** Who a round is sent on behalf of: a staff member, or SlotBack itself for automatic rounds. */
-type RoundBy = { organizationId: string; locationId: string; userId: string | null };
+export type RoundBy = { organizationId: string; locationId: string; userId: string | null };
 
 type CampaignRow = Awaited<ReturnType<typeof loadCampaign>>;
 
